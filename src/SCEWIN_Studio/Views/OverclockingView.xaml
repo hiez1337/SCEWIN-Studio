@@ -1,0 +1,29 @@
+<UserControl x:Class="SCEWIN_Studio.Views.OverclockingView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.modernwpf.com/2019"
+             xmlns:controls="clr-namespace:SCEWIN_Studio.Views.Controls"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="800">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+        <StackPanel MaxWidth="1000">
+            <TextBlock Text="{Binding L10n[Nav_Overclocking]}"
+                       FontWeight="Bold"
+                       FontSize="24"
+                       Foreground="#FFFFFF" />
+            <TextBlock Text="{Binding L10n[Ovc_PboDesc]}"
+                       FontSize="13"
+                       Margin="0,6,0,20"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+
+            <ItemsControl ItemsSource="{Binding OverclockingTokens}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <controls:TokenCard />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

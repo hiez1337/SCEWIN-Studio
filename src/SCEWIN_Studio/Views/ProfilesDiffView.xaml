@@ -1,0 +1,77 @@
+<UserControl x:Class="SCEWIN_Studio.Views.ProfilesDiffView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.modernwpf.com/2019"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="800">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+        <StackPanel MaxWidth="1000">
+            <TextBlock Text="{Binding L10n[Nav_ProfilesDiff]}"
+                       FontWeight="Bold"
+                       FontSize="24"
+                       Foreground="#FFFFFF" />
+            <TextBlock Text="{Binding L10n[Diff_Summary]}"
+                       FontSize="13"
+                       Margin="0,4,0,20"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+
+            <!-- Actions Bar -->
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16"
+                    Margin="0,0,0,16">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Операции с конфигурацией" FontWeight="SemiBold" FontSize="14" Foreground="#FFFFFF" />
+                        <TextBlock Text="Вы можете экспортировать только измененные параметры в формате официального скрипта SCEWIN."
+                                   FontSize="12" Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="{Binding L10n[Btn_ExportDiffScript]}"
+                                Style="{StaticResource HeaderActionButtonStyle}"
+                                Margin="0,0,8,0"
+                                Command="{Binding ExportDiffScriptCommand}" />
+
+                        <Button Content="{Binding L10n[Btn_ResetAll]}"
+                                Style="{StaticResource HeaderActionButtonStyle}"
+                                Margin="0,0,8,0"
+                                Command="{Binding ResetAllChangesCommand}" />
+
+                        <Button Content="{Binding L10n[Btn_ApplyDiff]}"
+                                Style="{StaticResource FluentAccentButtonStyle}"
+                                Command="{Binding ApplyChangesCommand}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Table of diffs -->
+            <TextBlock Text="Список модифицированных параметров" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,12" />
+
+            <DataGrid ItemsSource="{Binding PendingDiffs}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal"
+                      MinHeight="250"
+                      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Token ID" Binding="{Binding TokenId}" Width="90" />
+                    <DataGridTextColumn Header="Offset" Binding="{Binding Offset}" Width="80" />
+                    <DataGridTextColumn Header="Название параметра" Binding="{Binding Question}" Width="2*" />
+                    <DataGridTextColumn Header="Исходное значение" Binding="{Binding OldValue}" Width="*" />
+                    <DataGridTextColumn Header="Новое значение" Binding="{Binding NewValue}" Width="*" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

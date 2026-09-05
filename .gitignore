@@ -1,0 +1,35 @@
+## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+publish/
+
+## Visual Studio / Code cache
+.vs/
+.vscode/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+
+## Test results and temporary render outputs
+TestResults/
+[Tt]est[Rr]esult*/
+tests/*.png
+*.log
+
+## Backup and local NVRAM dumps
+Backups/
+nvram_dump_*.txt
+nvram_backup_*.txt
+nvram_diff_*.txt

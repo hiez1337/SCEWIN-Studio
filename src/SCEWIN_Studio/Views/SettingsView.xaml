@@ -1,0 +1,136 @@
+<UserControl x:Class="SCEWIN_Studio.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.modernwpf.com/2019"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="800">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+        <StackPanel MaxWidth="800">
+            <!-- Header -->
+            <TextBlock Text="{Binding L10n[Settings_Title]}"
+                       FontWeight="Bold"
+                       FontSize="24"
+                       Foreground="#FFFFFF"
+                       Margin="0,0,0,20" />
+
+            <!-- Language Section Card -->
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16"
+                    Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="{Binding L10n[Settings_Language]}" FontWeight="SemiBold" FontSize="14" Foreground="#FFFFFF" />
+                        <TextBlock Text="{Binding L10n[Settings_LanguageDesc]}" FontSize="12" Margin="0,3,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Русский (RU)"
+                                Style="{StaticResource HeaderActionButtonStyle}"
+                                Margin="0,0,6,0"
+                                Click="OnSelectRussian" />
+                        <Button Content="English (EN)"
+                                Style="{StaticResource HeaderActionButtonStyle}"
+                                Click="OnSelectEnglish" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- SCEWIN Configuration Card -->
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16"
+                    Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="{Binding L10n[Settings_ScewinSection]}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,10" Foreground="#FFFFFF" />
+
+                    <!-- Exe path -->
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding ScewinPath, Mode=TwoWay}"
+                                 ui:ControlHelper.CornerRadius="6"
+                                 Margin="0,0,8,0"
+                                 Height="34" />
+
+                        <Button Grid.Column="1"
+                                Content="{Binding L10n[Btn_BrowseScewin]}"
+                                Style="{StaticResource HeaderActionButtonStyle}"
+                                Margin="0,0,8,0"
+                                Height="34"
+                                Command="{Binding BrowseScewinPathCommand}" />
+
+                        <Button Grid.Column="2"
+                                Content="{Binding L10n[Btn_AutoDetect]}"
+                                Style="{StaticResource HeaderActionButtonStyle}"
+                                Height="34"
+                                Command="{Binding RunAutoDetectCommand}" />
+                    </Grid>
+
+                    <!-- Drivers check details -->
+                    <TextBlock Text="{Binding ScewinDetails}"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Download SCEWIN Section Card -->
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16"
+                    Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                        <TextBlock Text="{Binding L10n[Settings_DownloadSection]}" FontWeight="SemiBold" FontSize="14" Foreground="#FFFFFF" />
+                        <TextBlock Text="{Binding L10n[Settings_DownloadDesc]}"
+                                   TextWrapping="Wrap"
+                                   FontSize="12" Margin="0,3,0,0"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <Button Grid.Column="1"
+                            Content="{Binding L10n[Btn_DownloadScewin]}"
+                            Style="{StaticResource FluentAccentButtonStyle}"
+                            VerticalAlignment="Center"
+                            Command="{Binding DownloadLatestScewinCommand}" />
+                </Grid>
+            </Border>
+
+            <!-- About Section Card -->
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16">
+                <StackPanel>
+                    <TextBlock Text="О программе SCEWIN Studio" FontWeight="SemiBold" FontSize="14" />
+                    <TextBlock Text="Версия 1.0.0 | Построено на C# .NET 8 / WinUI Fluent Architecture&#x0a;Поддерживает AMISCE v5.05.01+ для материнских плат AMI Aptio V."
+                               FontSize="12" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,344 @@
+<Window x:Class="SCEWIN_Studio.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        xmlns:controls="clr-namespace:SCEWIN_Studio.Views.Controls"
+        xmlns:views="clr-namespace:SCEWIN_Studio.Views"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        ui:ThemeManager.IsThemeAware="True"
+        ui:WindowHelper.UseModernWindowStyle="True"
+        Title="SCEWIN Studio - AMI UEFI NVRAM Editor"
+        Height="820" Width="1300"
+        MinHeight="600" MinWidth="960"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="36" />
+            <RowDefinition Height="48" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Window Title Row -->
+        <Border Grid.Row="0"
+                Padding="16,0"
+                Background="#202020"
+                BorderBrush="#2A2A2A"
+                BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Width="22" Height="22"
+                        CornerRadius="5"
+                        Background="#162E40"
+                        BorderBrush="#255577"
+                        BorderThickness="1"
+                        Margin="0,0,10,0"
+                        VerticalAlignment="Center">
+                    <TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="#60CDFF" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <TextBlock Text="SCEWIN Studio v1.0 — UEFI NVRAM Configurator"
+                           FontWeight="SemiBold"
+                           FontSize="12"
+                           Foreground="#D4D4D4"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+        <!-- Status & Actions Toolbar -->
+        <Border Grid.Row="1"
+                Background="#202020"
+                BorderBrush="#2A2A2A"
+                BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="230" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Column 0: Connected / Dump Status Badge (Aligned with Navigation Pane) -->
+                <Border Grid.Column="0"
+                        Padding="10,4"
+                        CornerRadius="12"
+                        Margin="12,0,12,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="#132E1D" />
+                            <Setter Property="BorderBrush" Value="#235E35" />
+                            <Setter Property="BorderThickness" Value="1" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsDumpLoaded}" Value="False">
+                                    <Setter Property="Background" Value="#2E2413" />
+                                    <Setter Property="BorderBrush" Value="#664D1E" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Ellipse Width="7" Height="7" Margin="0,0,6,0" VerticalAlignment="Center">
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Setter Property="Fill" Value="#22C55E" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsDumpLoaded}" Value="False">
+                                            <Setter Property="Fill" Value="#FFA000" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
+                        <TextBlock Text="{Binding StatusHeader}"
+                                   FontSize="11"
+                                   FontWeight="SemiBold">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#86EFAC" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsDumpLoaded}" Value="False">
+                                            <Setter Property="Foreground" Value="#FFD166" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- Column 1: Motherboard Info Badge (Aligned with Main Content) -->
+                <Border Grid.Column="1"
+                        Padding="10,4"
+                        CornerRadius="6"
+                        Background="#262626"
+                        BorderBrush="#383838"
+                        BorderThickness="1"
+                        Margin="16,0,16,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE765;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="12"
+                                   Foreground="#8E8E8E"
+                                   Margin="0,0,6,0"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding MotherboardSummary}"
+                                   FontSize="11"
+                                   FontWeight="Medium"
+                                   Foreground="#D0D0D0"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Column 2: Header Action Buttons (Aligned with Diff Sidebar) -->
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Margin="0,0,14,0">
+                    <!-- Export NVRAM Button -->
+                    <Button Style="{StaticResource HeaderActionButtonStyle}"
+                            Command="{Binding ExportFromBiosCommand}"
+                            Height="30"
+                            Padding="8,0"
+                            Margin="0,0,6,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="&#xE898;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="#60CDFF" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding L10n[Btn_ExportNvramShort], FallbackValue='Export NVRAM'}" FontSize="11" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Import Diff Button -->
+                    <Button Style="{StaticResource HeaderActionButtonStyle}"
+                            Command="{Binding ImportDiffCommand}"
+                            Height="30"
+                            Padding="8,0"
+                            Margin="0,0,6,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="#60CDFF" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding L10n[Btn_ImportDiff], FallbackValue='Import Diff'}" FontSize="11" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Create Backup Button -->
+                    <Button Style="{StaticResource HeaderActionButtonStyle}"
+                            Command="{Binding CreateBackupCommand}"
+                            Height="30"
+                            Padding="8,0"
+                            Margin="0,0,6,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="&#xE7C3;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="#D0D0D0" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding L10n[Btn_CreateBackup], FallbackValue='Create Backup'}" FontSize="11" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Language Switcher Button -->
+                    <Button Command="{Binding ToggleLanguageCommand}"
+                            Style="{StaticResource HeaderActionButtonStyle}"
+                            ToolTip="Switch Language (RU / EN)"
+                            Height="30"
+                            Padding="6,0"
+                            Margin="0,0,6,0">
+                        <TextBlock Text="{Binding L10n.CurrentLanguage, FallbackValue='ru-RU'}" FontSize="10" FontWeight="SemiBold" />
+                    </Button>
+
+                    <!-- Admin Status Badge -->
+                    <Button Command="{Binding RestartAsAdminCommand}"
+                            ToolTip="Права доступа к NVRAM (Нажмите для перезапуска от имени Администратора)"
+                            Style="{StaticResource HeaderActionButtonStyle}"
+                            Height="30"
+                            Padding="6,0"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="🛡️ " FontSize="10" />
+                            <TextBlock Text="Admin" FontSize="10" FontWeight="SemiBold" Foreground="#00C853">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsAdmin}" Value="False">
+                                                <Setter Property="Text" Value="Non-Admin" />
+                                                <Setter Property="Foreground" Value="#FFA000" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Workspace: NavigationView + Content + Diff Sidebar -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="340" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Navigation and Content Frame -->
+            <ui:NavigationView Grid.Column="0"
+                               x:Name="NavView"
+                               IsBackButtonVisible="Collapsed"
+                               IsSettingsVisible="False"
+                               PaneDisplayMode="Left"
+                               IsPaneOpen="True"
+                               IsPaneToggleButtonVisible="False"
+                               ExpandedModeThresholdWidth="0"
+                               CompactModeThresholdWidth="0"
+                               OpenPaneLength="230"
+                               ItemInvoked="OnNavItemInvoked">
+
+                <!-- Left Navigation Pane Header: Search / Filter Box -->
+                <ui:NavigationView.PaneHeader>
+                    <Grid Margin="12,12,12,8">
+                        <TextBox Text="{Binding NavSearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                                 ui:ControlHelper.PlaceholderText="{Binding L10n[Nav_SearchPlaceholder], FallbackValue='Filter tokens or menus...'}"
+                                 ui:ControlHelper.CornerRadius="6"
+                                 Height="32"
+                                 Background="#262626"
+                                 BorderBrush="#383838"
+                                 BorderThickness="1"
+                                 Foreground="#FFFFFF"
+                                 Padding="8,0,26,0"
+                                 VerticalContentAlignment="Center" />
+                        <TextBlock Text="&#xE721;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="12"
+                                   Foreground="#757575"
+                                   HorizontalAlignment="Right"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,10,0"
+                                   IsHitTestVisible="False" />
+                    </Grid>
+                </ui:NavigationView.PaneHeader>
+
+                <ui:NavigationView.MenuItems>
+                    <ui:NavigationViewItem Content="{Binding L10n[Nav_Dashboard]}" Tag="Dashboard">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:FontIcon Glyph="&#xF0E2;" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
+                    <ui:NavigationViewItem Content="{Binding L10n[Nav_Overclocking]}" Tag="Overclocking">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:FontIcon Glyph="&#xEC4A;" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
+                    <ui:NavigationViewItem Content="{Binding L10n[Nav_Memory]}" Tag="Memory">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:FontIcon Glyph="&#xE8F1;" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
+                    <ui:NavigationViewItem Content="{Binding L10n[Nav_PciePower]}" Tag="PciePower" IsSelected="True">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:FontIcon Glyph="&#xE765;" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
+                    <ui:NavigationViewItem Content="{Binding L10n[Nav_CpuPower]}" Tag="CpuPower">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:FontIcon Glyph="&#xE950;" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
+                    <ui:NavigationViewItem Content="{Binding L10n[Nav_RawTokens]}" Tag="RawTokens">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:FontIcon Glyph="&#xE8A5;" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
+                    <ui:NavigationViewItem Content="{Binding L10n[Nav_ProfilesDiff]}" Tag="ProfilesDiff">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:FontIcon Glyph="&#xE8AB;" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
+                </ui:NavigationView.MenuItems>
+
+                <ui:NavigationView.FooterMenuItems>
+                    <ui:NavigationViewItem Content="{Binding L10n[Nav_Settings]}" Tag="Settings">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:FontIcon Glyph="&#xE713;" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
+                </ui:NavigationView.FooterMenuItems>
+
+                <!-- Hosted View Content -->
+                <ContentControl x:Name="ContentHost" />
+            </ui:NavigationView>
+
+            <!-- Right Dock: Live Pending Changes / Diff Viewer -->
+            <controls:DiffViewerControl Grid.Column="1" />
+        </Grid>
+
+        <!-- Loading Overlay -->
+        <Grid Grid.Row="0" Grid.RowSpan="3"
+              Background="#99000000">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="32,24"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    MinWidth="320">
+                <StackPanel HorizontalAlignment="Center">
+                    <ui:ProgressRing IsActive="True" Width="40" Height="40" Margin="0,0,0,16" />
+                    <TextBlock Text="{Binding LoadingMessage}"
+                               FontWeight="SemiBold"
+                               FontSize="14"
+                               TextAlignment="Center" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

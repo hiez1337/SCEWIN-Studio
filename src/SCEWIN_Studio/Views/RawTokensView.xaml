@@ -1,0 +1,94 @@
+<UserControl x:Class="SCEWIN_Studio.Views.RawTokensView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.modernwpf.com/2019"
+             xmlns:controls="clr-namespace:SCEWIN_Studio.Views.Controls"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="800">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="{Binding L10n[Nav_RawTokens]}"
+                       FontWeight="Bold"
+                       FontSize="24"
+                       Foreground="#FFFFFF" />
+            <TextBlock Text="Полный список всех обнаруженных переменных Setup Question в дампе NVRAM с возможностью мгновенного поиска и фильтрации."
+                       FontSize="13"
+                       Margin="0,4,0,0"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+        </StackPanel>
+
+        <!-- Filter Bar -->
+        <Border Grid.Row="1"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16,12"
+                Margin="0,0,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Search box -->
+                <TextBox Grid.Column="0"
+                         Text="{Binding RawSearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                         ui:ControlHelper.PlaceholderText="{Binding L10n[Raw_SearchPlaceholder]}"
+                         ui:ControlHelper.CornerRadius="6"
+                         Height="34"
+                         Margin="0,0,16,0" />
+
+                <!-- Category filter -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                    <TextBlock Text="{Binding L10n[Raw_CategoryFilter]}" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <ComboBox SelectedValue="{Binding RawCategoryFilter, Mode=TwoWay}"
+                              SelectedValuePath="Tag"
+                              MinWidth="140"
+                              Height="34">
+                        <ComboBoxItem Content="Все категории" Tag="All" IsSelected="True" />
+                        <ComboBoxItem Content="PCIe &amp; ASPM" Tag="ASPM" />
+                        <ComboBoxItem Content="AMD Разгон / PBO" Tag="Overclocking" />
+                        <ComboBoxItem Content="Память и Тайминги" Tag="Memory" />
+                        <ComboBoxItem Content="Процессор и C-States" Tag="CpuPower" />
+                        <ComboBoxItem Content="Периферия" Tag="Peripherals" />
+                        <ComboBoxItem Content="Прочие токены" Tag="Other" />
+                    </ComboBox>
+                </StackPanel>
+
+                <!-- Only modified checkbox -->
+                <CheckBox Grid.Column="2"
+                          Content="{Binding L10n[Raw_OnlyModified]}"
+                          IsChecked="{Binding RawOnlyModified, Mode=TwoWay}"
+                          VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <!-- Virtualized List of TokenCards -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding FilteredRawTokens}"
+                          VirtualizingStackPanel.IsVirtualizing="True"
+                          VirtualizingStackPanel.VirtualizationMode="Recycling">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <controls:TokenCard />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
