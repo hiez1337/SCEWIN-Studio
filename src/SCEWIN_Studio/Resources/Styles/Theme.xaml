@@ -230,7 +230,7 @@
     </Style>
 
     <!-- WinUI 3 Fluent Card ComboBox Style -->
-    <Style x:Key="FluentCardComboBoxStyle" TargetType="ComboBox">
+    <Style x:Key="FluentCardComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource DefaultComboBoxStyle}">
         <Setter Property="ui:ControlHelper.CornerRadius" Value="6" />
         <Setter Property="Background" Value="#292929" />
         <Setter Property="BorderBrush" Value="#3D3D3D" />
@@ -241,10 +241,21 @@
         <Setter Property="FontSize" Value="13" />
         <Setter Property="FontWeight" Value="Medium" />
         <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="ComboBoxItem" BasedOn="{StaticResource DefaultComboBoxItemStyle}">
+                    <Setter Property="Background" Value="#252525" />
+                    <Setter Property="Foreground" Value="#FFFFFF" />
+                    <Setter Property="ui:ControlHelper.CornerRadius" Value="4" />
+                    <Setter Property="Padding" Value="12,8" />
+                    <Setter Property="FontSize" Value="13" />
+                </Style>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- WinUI 3 Fluent Card Numeric Input TextBox Style -->
-    <Style x:Key="FluentCardNumericTextBoxStyle" TargetType="TextBox">
+    <Style x:Key="FluentCardNumericTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource DefaultTextBoxStyle}">
         <Setter Property="ui:ControlHelper.CornerRadius" Value="6" />
         <Setter Property="Background" Value="#222222" />
         <Setter Property="BorderBrush" Value="#3D3D3D" />
