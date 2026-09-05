@@ -4,17 +4,19 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
+using SCEWIN_Studio.Collections;
 using SCEWIN_Studio.Models;
 using SCEWIN_Studio.Services;
 
 namespace SCEWIN_Studio.ViewModels;
 
-public partial class MainViewModel : ObservableObject
+public partial class MainViewModel : ObservableObject, IDisposable
 {
     private readonly IScewinParser _parser;
     private readonly IScewinDetector _detector;
@@ -103,14 +105,14 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _memorySubCategory = "All";
 
-    public ObservableCollection<ScewinToken> FilteredOverclockingTokens { get; } = new();
-    public ObservableCollection<ScewinToken> FilteredCpuTokens { get; } = new();
-    public ObservableCollection<ScewinToken> FilteredAspmTokens { get; } = new();
-    public ObservableCollection<ScewinToken> FilteredPrimaryCbsMemoryTokens { get; } = new();
-    public ObservableCollection<ScewinToken> FilteredMsiOverlayMemoryTokens { get; } = new();
-    public ObservableCollection<ScewinToken> FilteredPbsDuplicateMemoryTokens { get; } = new();
-    public ObservableCollection<ScewinToken> FilteredGeneralMemoryTokens { get; } = new();
-    public ObservableCollection<ScewinToken> FilteredMemoryTokens { get; } = new();
+    public ObservableRangeCollection<ScewinToken> FilteredOverclockingTokens { get; } = new();
+    public ObservableRangeCollection<ScewinToken> FilteredCpuTokens { get; } = new();
+    public ObservableRangeCollection<ScewinToken> FilteredAspmTokens { get; } = new();
+    public ObservableRangeCollection<ScewinToken> FilteredPrimaryCbsMemoryTokens { get; } = new();
+    public ObservableRangeCollection<ScewinToken> FilteredMsiOverlayMemoryTokens { get; } = new();
+    public ObservableRangeCollection<ScewinToken> FilteredPbsDuplicateMemoryTokens { get; } = new();
+    public ObservableRangeCollection<ScewinToken> FilteredGeneralMemoryTokens { get; } = new();
+    public ObservableRangeCollection<ScewinToken> FilteredMemoryTokens { get; } = new();
 
     public bool HasFilteredPrimaryCbsTokens => FilteredPrimaryCbsMemoryTokens.Count > 0;
     public bool HasFilteredMsiOverlayTokens => FilteredMsiOverlayMemoryTokens.Count > 0;
@@ -145,7 +147,17 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _rawOnlyModified;
 
-    public ObservableCollection<ScewinToken> FilteredRawTokens { get; } = new();
+    private CancellationTokenSource? _searchCts;
+
+    public int SearchDebounceDelayMs { get; set; } = 160;
+
+    public Task? CurrentSearchTask { get; private set; }
+
+    partial void OnRawSearchQueryChanged(string value) => TriggerRawFilterDebounced();
+    partial void OnRawCategoryFilterChanged(string value) => TriggerRawFilterDebounced();
+    partial void OnRawOnlyModifiedChanged(bool value) => TriggerRawFilterDebounced();
+
+    public ObservableRangeCollection<ScewinToken> FilteredRawTokens { get; } = new();
 
     public MainViewModel() : this(
         new ScewinParser(),
@@ -983,121 +995,169 @@ public partial class MainViewModel : ObservableObject
 
     private void UpdateOverclockingFilter()
     {
-        FilteredOverclockingTokens.Clear();
-        if (CurrentDump == null) return;
+        if (CurrentDump == null)
+        {
+            FilteredOverclockingTokens.ReplaceRange(Array.Empty<ScewinToken>());
+            return;
+        }
 
         var filter = OverclockingSubCategory ?? "All";
         if (filter == "All")
         {
-            foreach (var t in OverclockingTokens)
-            {
-                FilteredOverclockingTokens.Add(t);
-            }
+            FilteredOverclockingTokens.ReplaceRange(OverclockingTokens);
         }
         else
         {
-            var combined = OverclockingTokens.Concat(CpuTokens).Distinct();
-            foreach (var t in combined)
+            var matches = new List<ScewinToken>();
+            var seen = new HashSet<ScewinToken>();
+            foreach (var t in OverclockingTokens)
             {
-                if (string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase) && seen.Add(t))
                 {
-                    FilteredOverclockingTokens.Add(t);
+                    matches.Add(t);
                 }
             }
+            foreach (var t in CpuTokens)
+            {
+                if (string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase) && seen.Add(t))
+                {
+                    matches.Add(t);
+                }
+            }
+            FilteredOverclockingTokens.ReplaceRange(matches);
         }
     }
 
     private void UpdateCpuPowerFilter()
     {
-        FilteredCpuTokens.Clear();
-        if (CurrentDump == null) return;
+        if (CurrentDump == null)
+        {
+            FilteredCpuTokens.ReplaceRange(Array.Empty<ScewinToken>());
+            return;
+        }
 
         var filter = CpuPowerSubCategory ?? "All";
         if (filter == "All")
         {
-            foreach (var t in CpuTokens)
-            {
-                FilteredCpuTokens.Add(t);
-            }
+            FilteredCpuTokens.ReplaceRange(CpuTokens);
         }
         else
         {
-            var combined = CpuTokens.Concat(OverclockingTokens).Distinct();
-            foreach (var t in combined)
+            var matches = new List<ScewinToken>();
+            var seen = new HashSet<ScewinToken>();
+            foreach (var t in CpuTokens)
             {
-                if (string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase) && seen.Add(t))
                 {
-                    FilteredCpuTokens.Add(t);
+                    matches.Add(t);
                 }
             }
+            foreach (var t in OverclockingTokens)
+            {
+                if (string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase) && seen.Add(t))
+                {
+                    matches.Add(t);
+                }
+            }
+            FilteredCpuTokens.ReplaceRange(matches);
         }
     }
 
     private void UpdatePcieFilter()
     {
-        FilteredAspmTokens.Clear();
-        if (CurrentDump == null) return;
+        if (CurrentDump == null)
+        {
+            FilteredAspmTokens.ReplaceRange(Array.Empty<ScewinToken>());
+            return;
+        }
 
         var filter = PcieSubCategory ?? "All";
-        foreach (var t in AspmTokens)
+        if (filter == "All")
         {
-            if (filter == "All" || string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+            FilteredAspmTokens.ReplaceRange(AspmTokens);
+        }
+        else
+        {
+            var matches = new List<ScewinToken>();
+            foreach (var t in AspmTokens)
             {
-                FilteredAspmTokens.Add(t);
+                if (string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+                {
+                    matches.Add(t);
+                }
             }
+            FilteredAspmTokens.ReplaceRange(matches);
         }
     }
 
     private void UpdateMemoryFilter()
     {
-        FilteredPrimaryCbsMemoryTokens.Clear();
-        FilteredMsiOverlayMemoryTokens.Clear();
-        FilteredPbsDuplicateMemoryTokens.Clear();
-        FilteredGeneralMemoryTokens.Clear();
-        FilteredMemoryTokens.Clear();
-
-        if (CurrentDump == null) return;
+        if (CurrentDump == null)
+        {
+            FilteredPrimaryCbsMemoryTokens.ReplaceRange(Array.Empty<ScewinToken>());
+            FilteredMsiOverlayMemoryTokens.ReplaceRange(Array.Empty<ScewinToken>());
+            FilteredPbsDuplicateMemoryTokens.ReplaceRange(Array.Empty<ScewinToken>());
+            FilteredGeneralMemoryTokens.ReplaceRange(Array.Empty<ScewinToken>());
+            FilteredMemoryTokens.ReplaceRange(Array.Empty<ScewinToken>());
+            OnPropertyChanged(nameof(HasFilteredPrimaryCbsTokens));
+            OnPropertyChanged(nameof(HasFilteredMsiOverlayTokens));
+            OnPropertyChanged(nameof(HasFilteredPbsDuplicateTokens));
+            OnPropertyChanged(nameof(HasFilteredGeneralMemoryTokens));
+            OnPropertyChanged(nameof(HasFilteredMemoryTokens));
+            return;
+        }
 
         var filter = MemorySubCategory ?? "All";
 
-        foreach (var t in PrimaryCbsMemoryTokens)
+        if (filter == "All")
         {
-            if (filter == "All" || string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
-            {
-                FilteredPrimaryCbsMemoryTokens.Add(t);
-            }
+            FilteredPrimaryCbsMemoryTokens.ReplaceRange(PrimaryCbsMemoryTokens);
+            FilteredMsiOverlayMemoryTokens.ReplaceRange(MsiOverlayMemoryTokens);
+            FilteredPbsDuplicateMemoryTokens.ReplaceRange(PbsDuplicateMemoryTokens);
+            FilteredGeneralMemoryTokens.ReplaceRange(GeneralMemoryTokens);
+            FilteredMemoryTokens.ReplaceRange(MemoryTokens);
         }
-
-        foreach (var t in MsiOverlayMemoryTokens)
+        else
         {
-            if (filter == "All" || string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+            var cbs = new List<ScewinToken>();
+            foreach (var t in PrimaryCbsMemoryTokens)
             {
-                FilteredMsiOverlayMemoryTokens.Add(t);
+                if (string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+                    cbs.Add(t);
             }
-        }
+            FilteredPrimaryCbsMemoryTokens.ReplaceRange(cbs);
 
-        foreach (var t in PbsDuplicateMemoryTokens)
-        {
-            if (filter == "All" || string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+            var msi = new List<ScewinToken>();
+            foreach (var t in MsiOverlayMemoryTokens)
             {
-                FilteredPbsDuplicateMemoryTokens.Add(t);
+                if (string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+                    msi.Add(t);
             }
-        }
+            FilteredMsiOverlayMemoryTokens.ReplaceRange(msi);
 
-        foreach (var t in GeneralMemoryTokens)
-        {
-            if (filter == "All" || string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+            var pbs = new List<ScewinToken>();
+            foreach (var t in PbsDuplicateMemoryTokens)
             {
-                FilteredGeneralMemoryTokens.Add(t);
+                if (string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+                    pbs.Add(t);
             }
-        }
+            FilteredPbsDuplicateMemoryTokens.ReplaceRange(pbs);
 
-        foreach (var t in MemoryTokens)
-        {
-            if (filter == "All" || string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+            var gen = new List<ScewinToken>();
+            foreach (var t in GeneralMemoryTokens)
             {
-                FilteredMemoryTokens.Add(t);
+                if (string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+                    gen.Add(t);
             }
+            FilteredGeneralMemoryTokens.ReplaceRange(gen);
+
+            var mem = new List<ScewinToken>();
+            foreach (var t in MemoryTokens)
+            {
+                if (string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+                    mem.Add(t);
+            }
+            FilteredMemoryTokens.ReplaceRange(mem);
         }
 
         OnPropertyChanged(nameof(HasFilteredPrimaryCbsTokens));
@@ -1107,41 +1167,159 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(HasFilteredMemoryTokens));
     }
 
-    partial void OnRawSearchQueryChanged(string value) => UpdateRawFilter();
-    partial void OnRawCategoryFilterChanged(string value) => UpdateRawFilter();
-    partial void OnRawOnlyModifiedChanged(bool value) => UpdateRawFilter();
-
-    private void UpdateRawFilter()
+    public void TriggerRawFilterDebounced(int? overrideDelayMs = null)
     {
-        FilteredRawTokens.Clear();
-        if (CurrentDump == null) return;
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
 
-        var q = (RawSearchQuery ?? "").Trim().ToLowerInvariant();
-        var cat = RawCategoryFilter ?? "All";
+        var cts = new CancellationTokenSource();
+        _searchCts = cts;
+        var token = cts.Token;
+        int delay = overrideDelayMs ?? SearchDebounceDelayMs;
 
-        foreach (var t in CurrentDump.Tokens)
+        CurrentSearchTask = ExecuteSearchFilterAsync(delay, token);
+    }
+
+    private async Task ExecuteSearchFilterAsync(int delayMs, CancellationToken cancellationToken)
+    {
+        try
         {
-            if (RawOnlyModified && !t.IsModified) continue;
-
-            if (cat != "All" &&
-                !string.Equals(t.Category, cat, StringComparison.OrdinalIgnoreCase) &&
-                !string.Equals(t.SubCategory, cat, StringComparison.OrdinalIgnoreCase))
+            if (delayMs > 0)
             {
-                continue;
+                await Task.Delay(delayMs, cancellationToken);
             }
 
-            if (!string.IsNullOrEmpty(q))
+            if (cancellationToken.IsCancellationRequested) return;
+
+            var tokens = CurrentDump?.Tokens;
+            if (tokens == null || tokens.Count == 0)
             {
-                bool match = t.Question.ToLowerInvariant().Contains(q) ||
-                             t.TokenId.ToLowerInvariant().Contains(q) ||
-                             t.Offset.ToLowerInvariant().Contains(q) ||
-                             t.HelpString.ToLowerInvariant().Contains(q) ||
-                             t.CurrentDisplayValue.ToLowerInvariant().Contains(q) ||
-                             t.SubCategory.ToLowerInvariant().Contains(q);
-                if (!match) continue;
+                FilteredRawTokens.ReplaceRange(Array.Empty<ScewinToken>());
+                return;
             }
 
-            FilteredRawTokens.Add(t);
+            var query = (RawSearchQuery ?? string.Empty).Trim();
+            var category = RawCategoryFilter ?? "All";
+            var onlyModified = RawOnlyModified;
+
+            // Perform 4000-token search matching on background thread Task.Run
+            var matches = await Task.Run(() =>
+            {
+                var result = new List<ScewinToken>();
+                foreach (var t in tokens)
+                {
+                    if (cancellationToken.IsCancellationRequested) return result;
+
+                    if (onlyModified && !t.IsModified) continue;
+
+                    if (category != "All" &&
+                        !string.Equals(t.Category, category, StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(t.SubCategory, category, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    if (!string.IsNullOrEmpty(query))
+                    {
+                        bool match = t.Question.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                     t.TokenId.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                     t.Offset.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                     t.HelpString.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                     t.CurrentDisplayValue.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                     t.SubCategory.Contains(query, StringComparison.OrdinalIgnoreCase);
+
+                        if (!match) continue;
+                    }
+
+                    result.Add(t);
+                }
+                return result;
+            }, cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested) return;
+
+            // Call FilteredRawTokens.ReplaceRange(matches) on the UI Dispatcher
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher != null && !dispatcher.CheckAccess())
+            {
+                await dispatcher.InvokeAsync(() =>
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        FilteredRawTokens.ReplaceRange(matches);
+                    }
+                });
+            }
+            else
+            {
+                FilteredRawTokens.ReplaceRange(matches);
+            }
         }
+        catch (OperationCanceledException)
+        {
+            // Expected cancellation on debouncing
+        }
+    }
+
+    public void UpdateRawFilter(bool immediate = true)
+    {
+        if (immediate)
+        {
+            _searchCts?.Cancel();
+            _searchCts?.Dispose();
+            _searchCts = null;
+
+            var tokens = CurrentDump?.Tokens;
+            if (tokens == null || tokens.Count == 0)
+            {
+                FilteredRawTokens.ReplaceRange(Array.Empty<ScewinToken>());
+                return;
+            }
+
+            var query = (RawSearchQuery ?? string.Empty).Trim();
+            var category = RawCategoryFilter ?? "All";
+            var onlyModified = RawOnlyModified;
+
+            var matches = new List<ScewinToken>();
+            foreach (var t in tokens)
+            {
+                if (onlyModified && !t.IsModified) continue;
+
+                if (category != "All" &&
+                    !string.Equals(t.Category, category, StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(t.SubCategory, category, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (!string.IsNullOrEmpty(query))
+                {
+                    bool match = t.Question.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                 t.TokenId.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                 t.Offset.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                 t.HelpString.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                 t.CurrentDisplayValue.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                 t.SubCategory.Contains(query, StringComparison.OrdinalIgnoreCase);
+
+                    if (!match) continue;
+                }
+
+                matches.Add(t);
+            }
+
+            FilteredRawTokens.ReplaceRange(matches);
+        }
+        else
+        {
+            TriggerRawFilterDebounced();
+        }
+    }
+
+    public void Dispose()
+    {
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        _searchCts = null;
+        GC.SuppressFinalize(this);
     }
 }

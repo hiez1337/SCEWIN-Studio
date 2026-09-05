@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using SCEWIN_Studio.Models;
 using SCEWIN_Studio.Services;
 using SCEWIN_Studio.ViewModels;
@@ -185,7 +186,7 @@ public class SubCategoryReorganizationTests
     }
 
     [Fact]
-    public void ViewModel_SubCategoryFilters_FilterTokensWithoutUiFreeze()
+    public async Task ViewModel_SubCategoryFilters_FilterTokensWithoutUiFreeze()
     {
         var dump = new ScewinDump();
         dump.Tokens.Add(new ScewinToken { Question = "Curve Optimizer", TokenId = "01", Category = "Overclocking", SubCategory = "PboCurve" });
@@ -241,15 +242,19 @@ public class SubCategoryReorganizationTests
         Assert.Equal("DRAM Voltage", vm.FilteredGeneralMemoryTokens[0].Question);
 
         // 4. RawCategoryFilter supports both Category and SubCategory
+        vm.SearchDebounceDelayMs = 0;
         vm.RawCategoryFilter = "Voltages";
+        if (vm.CurrentSearchTask != null) await vm.CurrentSearchTask;
         Assert.Single(vm.FilteredRawTokens);
         Assert.Equal("DRAM Voltage", vm.FilteredRawTokens[0].Question);
 
         vm.RawCategoryFilter = "PboLimits";
+        if (vm.CurrentSearchTask != null) await vm.CurrentSearchTask;
         Assert.Single(vm.FilteredRawTokens);
         Assert.Equal("PPT Limit", vm.FilteredRawTokens[0].Question);
 
         vm.RawCategoryFilter = "All";
+        if (vm.CurrentSearchTask != null) await vm.CurrentSearchTask;
         Assert.Equal(9, vm.FilteredRawTokens.Count);
     }
 }
