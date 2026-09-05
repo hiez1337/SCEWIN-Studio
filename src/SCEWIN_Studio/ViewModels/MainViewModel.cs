@@ -90,6 +90,51 @@ public partial class MainViewModel : ObservableObject
     public bool HasPbsDuplicateTokens => PbsDuplicateMemoryTokens.Count > 0;
     public bool HasGeneralMemoryTokens => GeneralMemoryTokens.Count > 0;
 
+    // SubCategory filters and filtered collections for views
+    [ObservableProperty]
+    private string _overclockingSubCategory = "All";
+
+    [ObservableProperty]
+    private string _cpuPowerSubCategory = "All";
+
+    [ObservableProperty]
+    private string _pcieSubCategory = "All";
+
+    [ObservableProperty]
+    private string _memorySubCategory = "All";
+
+    public ObservableCollection<ScewinToken> FilteredOverclockingTokens { get; } = new();
+    public ObservableCollection<ScewinToken> FilteredCpuTokens { get; } = new();
+    public ObservableCollection<ScewinToken> FilteredAspmTokens { get; } = new();
+    public ObservableCollection<ScewinToken> FilteredPrimaryCbsMemoryTokens { get; } = new();
+    public ObservableCollection<ScewinToken> FilteredMsiOverlayMemoryTokens { get; } = new();
+    public ObservableCollection<ScewinToken> FilteredPbsDuplicateMemoryTokens { get; } = new();
+    public ObservableCollection<ScewinToken> FilteredGeneralMemoryTokens { get; } = new();
+    public ObservableCollection<ScewinToken> FilteredMemoryTokens { get; } = new();
+
+    public bool HasFilteredPrimaryCbsTokens => FilteredPrimaryCbsMemoryTokens.Count > 0;
+    public bool HasFilteredMsiOverlayTokens => FilteredMsiOverlayMemoryTokens.Count > 0;
+    public bool HasFilteredPbsDuplicateTokens => FilteredPbsDuplicateMemoryTokens.Count > 0;
+    public bool HasFilteredGeneralMemoryTokens => FilteredGeneralMemoryTokens.Count > 0;
+    public bool HasFilteredMemoryTokens => FilteredMemoryTokens.Count > 0;
+
+    [RelayCommand]
+    public void SetOverclockingSubCategory(string subCategory) => OverclockingSubCategory = subCategory;
+
+    [RelayCommand]
+    public void SetCpuPowerSubCategory(string subCategory) => CpuPowerSubCategory = subCategory;
+
+    [RelayCommand]
+    public void SetPcieSubCategory(string subCategory) => PcieSubCategory = subCategory;
+
+    [RelayCommand]
+    public void SetMemorySubCategory(string subCategory) => MemorySubCategory = subCategory;
+
+    partial void OnOverclockingSubCategoryChanged(string value) => UpdateOverclockingFilter();
+    partial void OnCpuPowerSubCategoryChanged(string value) => UpdateCpuPowerFilter();
+    partial void OnPcieSubCategoryChanged(string value) => UpdatePcieFilter();
+    partial void OnMemorySubCategoryChanged(string value) => UpdateMemoryFilter();
+
     // Raw tab filtering
     [ObservableProperty]
     private string _rawSearchQuery = string.Empty;
@@ -459,37 +504,38 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(HasPbsDuplicateTokens));
         OnPropertyChanged(nameof(HasGeneralMemoryTokens));
 
-        // Curate AspmTokens so the primary 5 latency optimization settings from the mockup appear at the top:
+        // Curate AspmTokens so the primary PCIe latency optimization settings appear at the top:
         // 1. ASPM / Active State Power Management
-        // 2. PCIe Slot Bifurcation / Lanes Configuration
-        // 3. Curve Optimizer
-        // 4. Global C-States
-        // 5. Re-Size BAR Support
+        // 2. PCIe Slot Bifurcation / Lanes Configuration / Link Speed
+        // 3. Re-Size BAR Support / Above 4G Decoding
         var priorityAspm = new List<ScewinToken>();
 
-        var aspm = dump.Tokens.FirstOrDefault(t =>
+        var aspm = AspmTokens.FirstOrDefault(t =>
             t.Question.Equals("Active State Power Management (ASPM)", StringComparison.OrdinalIgnoreCase) ||
             t.Question.Equals("ASPM Mode Control", StringComparison.OrdinalIgnoreCase) ||
             t.Question.Equals("ASPM Support", StringComparison.OrdinalIgnoreCase) ||
-            t.Question.Equals("PM L1 SS", StringComparison.OrdinalIgnoreCase));
+            t.Question.Equals("PM L1 SS", StringComparison.OrdinalIgnoreCase)) ??
+            dump.Tokens.FirstOrDefault(t => t.Category == "ASPM" && (
+                t.Question.Equals("Active State Power Management (ASPM)", StringComparison.OrdinalIgnoreCase) ||
+                t.Question.Equals("ASPM Mode Control", StringComparison.OrdinalIgnoreCase) ||
+                t.Question.Equals("ASPM Support", StringComparison.OrdinalIgnoreCase) ||
+                t.Question.Equals("PM L1 SS", StringComparison.OrdinalIgnoreCase)));
         if (aspm != null) priorityAspm.Add(aspm);
 
-        var bifurc = dump.Tokens.FirstOrDefault(t =>
+        var bifurc = AspmTokens.FirstOrDefault(t =>
             t.Question.Contains("Bifurcation", StringComparison.OrdinalIgnoreCase) ||
-            t.Question.Equals("PCIe/GFX Lanes Configuration", StringComparison.OrdinalIgnoreCase));
+            t.Question.Equals("PCIe/GFX Lanes Configuration", StringComparison.OrdinalIgnoreCase)) ??
+            dump.Tokens.FirstOrDefault(t => t.Category == "ASPM" && (
+                t.Question.Contains("Bifurcation", StringComparison.OrdinalIgnoreCase) ||
+                t.Question.Equals("PCIe/GFX Lanes Configuration", StringComparison.OrdinalIgnoreCase)));
         if (bifurc != null && !priorityAspm.Contains(bifurc)) priorityAspm.Add(bifurc);
 
-        var curve = dump.Tokens.FirstOrDefault(t =>
-            t.Question.Equals("Curve Optimizer", StringComparison.OrdinalIgnoreCase));
-        if (curve != null && !priorityAspm.Contains(curve)) priorityAspm.Add(curve);
-
-        var cstates = dump.Tokens.FirstOrDefault(t =>
-            t.Question.Equals("Global C-state Control", StringComparison.OrdinalIgnoreCase) ||
-            t.Question.Equals("Global C-States", StringComparison.OrdinalIgnoreCase));
-        if (cstates != null && !priorityAspm.Contains(cstates)) priorityAspm.Add(cstates);
-
-        var resizeBar = dump.Tokens.FirstOrDefault(t =>
-            t.Question.Equals("Re-Size BAR Support", StringComparison.OrdinalIgnoreCase));
+        var resizeBar = AspmTokens.FirstOrDefault(t =>
+            t.Question.Equals("Re-Size BAR Support", StringComparison.OrdinalIgnoreCase) ||
+            t.Question.Equals("Above 4G Decoding", StringComparison.OrdinalIgnoreCase)) ??
+            dump.Tokens.FirstOrDefault(t => t.Category == "ASPM" && (
+                t.Question.Equals("Re-Size BAR Support", StringComparison.OrdinalIgnoreCase) ||
+                t.Question.Equals("Above 4G Decoding", StringComparison.OrdinalIgnoreCase)));
         if (resizeBar != null && !priorityAspm.Contains(resizeBar)) priorityAspm.Add(resizeBar);
 
         if (priorityAspm.Count > 0)
@@ -500,6 +546,10 @@ public partial class MainViewModel : ObservableObject
             foreach (var r in remaining) AspmTokens.Add(r);
         }
 
+        UpdateOverclockingFilter();
+        UpdateCpuPowerFilter();
+        UpdatePcieFilter();
+        UpdateMemoryFilter();
         UpdateRawFilter();
         OnPropertyChanged(nameof(ModifiedCount));
         OnPropertyChanged(nameof(HasModifiedItems));
@@ -895,6 +945,132 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    private void UpdateOverclockingFilter()
+    {
+        FilteredOverclockingTokens.Clear();
+        if (CurrentDump == null) return;
+
+        var filter = OverclockingSubCategory ?? "All";
+        if (filter == "All")
+        {
+            foreach (var t in OverclockingTokens)
+            {
+                FilteredOverclockingTokens.Add(t);
+            }
+        }
+        else
+        {
+            var combined = OverclockingTokens.Concat(CpuTokens).Distinct();
+            foreach (var t in combined)
+            {
+                if (string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+                {
+                    FilteredOverclockingTokens.Add(t);
+                }
+            }
+        }
+    }
+
+    private void UpdateCpuPowerFilter()
+    {
+        FilteredCpuTokens.Clear();
+        if (CurrentDump == null) return;
+
+        var filter = CpuPowerSubCategory ?? "All";
+        if (filter == "All")
+        {
+            foreach (var t in CpuTokens)
+            {
+                FilteredCpuTokens.Add(t);
+            }
+        }
+        else
+        {
+            var combined = CpuTokens.Concat(OverclockingTokens).Distinct();
+            foreach (var t in combined)
+            {
+                if (string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+                {
+                    FilteredCpuTokens.Add(t);
+                }
+            }
+        }
+    }
+
+    private void UpdatePcieFilter()
+    {
+        FilteredAspmTokens.Clear();
+        if (CurrentDump == null) return;
+
+        var filter = PcieSubCategory ?? "All";
+        foreach (var t in AspmTokens)
+        {
+            if (filter == "All" || string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+            {
+                FilteredAspmTokens.Add(t);
+            }
+        }
+    }
+
+    private void UpdateMemoryFilter()
+    {
+        FilteredPrimaryCbsMemoryTokens.Clear();
+        FilteredMsiOverlayMemoryTokens.Clear();
+        FilteredPbsDuplicateMemoryTokens.Clear();
+        FilteredGeneralMemoryTokens.Clear();
+        FilteredMemoryTokens.Clear();
+
+        if (CurrentDump == null) return;
+
+        var filter = MemorySubCategory ?? "All";
+
+        foreach (var t in PrimaryCbsMemoryTokens)
+        {
+            if (filter == "All" || string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+            {
+                FilteredPrimaryCbsMemoryTokens.Add(t);
+            }
+        }
+
+        foreach (var t in MsiOverlayMemoryTokens)
+        {
+            if (filter == "All" || string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+            {
+                FilteredMsiOverlayMemoryTokens.Add(t);
+            }
+        }
+
+        foreach (var t in PbsDuplicateMemoryTokens)
+        {
+            if (filter == "All" || string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+            {
+                FilteredPbsDuplicateMemoryTokens.Add(t);
+            }
+        }
+
+        foreach (var t in GeneralMemoryTokens)
+        {
+            if (filter == "All" || string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+            {
+                FilteredGeneralMemoryTokens.Add(t);
+            }
+        }
+
+        foreach (var t in MemoryTokens)
+        {
+            if (filter == "All" || string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
+            {
+                FilteredMemoryTokens.Add(t);
+            }
+        }
+
+        OnPropertyChanged(nameof(HasFilteredPrimaryCbsTokens));
+        OnPropertyChanged(nameof(HasFilteredMsiOverlayTokens));
+        OnPropertyChanged(nameof(HasFilteredPbsDuplicateTokens));
+        OnPropertyChanged(nameof(HasFilteredGeneralMemoryTokens));
+        OnPropertyChanged(nameof(HasFilteredMemoryTokens));
+    }
+
     partial void OnRawSearchQueryChanged(string value) => UpdateRawFilter();
     partial void OnRawCategoryFilterChanged(string value) => UpdateRawFilter();
     partial void OnRawOnlyModifiedChanged(bool value) => UpdateRawFilter();
@@ -911,8 +1087,12 @@ public partial class MainViewModel : ObservableObject
         {
             if (RawOnlyModified && !t.IsModified) continue;
 
-            if (cat != "All" && !string.Equals(t.Category, cat, StringComparison.OrdinalIgnoreCase))
+            if (cat != "All" &&
+                !string.Equals(t.Category, cat, StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(t.SubCategory, cat, StringComparison.OrdinalIgnoreCase))
+            {
                 continue;
+            }
 
             if (!string.IsNullOrEmpty(q))
             {
@@ -920,7 +1100,8 @@ public partial class MainViewModel : ObservableObject
                              t.TokenId.ToLowerInvariant().Contains(q) ||
                              t.Offset.ToLowerInvariant().Contains(q) ||
                              t.HelpString.ToLowerInvariant().Contains(q) ||
-                             t.CurrentDisplayValue.ToLowerInvariant().Contains(q);
+                             t.CurrentDisplayValue.ToLowerInvariant().Contains(q) ||
+                             t.SubCategory.ToLowerInvariant().Contains(q);
                 if (!match) continue;
             }
 

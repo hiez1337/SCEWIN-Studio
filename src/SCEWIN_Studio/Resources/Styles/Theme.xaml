@@ -209,6 +209,49 @@
         </Setter>
     </Style>
 
+    <!-- Modern WinUI 3 Horizontal Pill / Chip Button Style -->
+    <Style x:Key="FluentPillFilterButtonStyle" TargetType="Button">
+        <Setter Property="FontFamily" Value="{StaticResource SegoeUIVariable}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="14,0" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="Background" Value="#262626" />
+        <Setter Property="Foreground" Value="#C0C0C0" />
+        <Setter Property="BorderBrush" Value="#383838" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="pillBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="16"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="pillBorder" Property="Background" Value="#333333" />
+                            <Setter TargetName="pillBorder" Property="BorderBrush" Value="#4F4F4F" />
+                            <Setter Property="Foreground" Value="#FFFFFF" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="pillBorder" Property="Background" Value="#1E1E1E" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Fluent Spoiler Link Button Style (No focus visual dotted border) -->
     <Style x:Key="FluentSpoilerHyperlinkButtonStyle" TargetType="Button">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />

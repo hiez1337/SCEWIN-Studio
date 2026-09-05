@@ -231,12 +231,14 @@ public class ScewinParser : IScewinParser
 
         // Categorization
         token.Category = DetermineCategory(token.Question, token.HelpString);
+        token.SubCategory = DetermineSubCategory(token.Question, token.HelpString, token.Category);
         token.SafetyLevel = DetermineSafety(token.Question, token.HelpString, token.Category);
         token.MemoryTier = DetermineMemoryTier(token);
 
         if (token.MemoryTier != MemoryTier.None && token.Category != "Memory")
         {
             token.Category = "Memory";
+            token.SubCategory = DetermineSubCategory(token.Question, token.HelpString, token.Category);
         }
     }
 
@@ -385,23 +387,289 @@ public class ScewinParser : IScewinParser
     public static string DetermineCategory(string question, string help)
     {
         var q = (question + " " + help).ToLowerInvariant();
+        var qName = question.Trim().ToLowerInvariant();
 
-        if (q.Contains("aspm") || q.Contains("bifurcation") || q.Contains("pcie") || q.Contains("pci express") || q.Contains("peg ") || q.Contains("link state") || q.Contains("l0s") || q.Contains("l1 entry") || q.Contains("link width"))
-            return "ASPM";
+        // 1. Boot & Security (Fast Boot, Secure Boot, TPM, SATA/RAID)
+        // Must NEVER leak into CPU Frequency or Overclocking
+        if (q.Contains("fast boot") || q.Contains("boot mode") || q.Contains("boot option") ||
+            q.Contains("csm support") || q.Contains("launch csm") || q.Contains("quiet boot") ||
+            q.Contains("post delay") || q.Contains("numlock") || q.Contains("ftpm") ||
+            q.Contains("security device") || q.Contains("trusted computing") || q.Contains("secure boot") ||
+            q.Contains("chassis intrusion") || q.Contains("sata mode") || q.Contains("nvme raid") ||
+            q.Contains("raidxpert") || q.Contains("sata controller") || q.Contains("ahci"))
+        {
+            return "BootSecurity";
+        }
 
-        if (q.Contains("pbo") || q.Contains("precision boost") || q.Contains("curve optimizer") || q.Contains("scalar") || q.Contains("ppt limit") || q.Contains("tdc limit") || q.Contains("edc limit") || q.Contains("fclk") || q.Contains("infinity fabric"))
-            return "Overclocking";
-
-        if (q.Contains("dram") || q.Contains("memory") || q.Contains("cas latency") || q.Contains("tcl") || q.Contains("trcd") || q.Contains("trp") || q.Contains("tras") || q.Contains("procodt") || q.Contains("uclk") || q.Contains("mclk") || q.Contains("command rate") || q.Contains("timing") || IsMemoryTimingQuestion(question))
-            return "Memory";
-
-        if (q.Contains("c-state") || q.Contains("cstate") || q.Contains("global c-state") || q.Contains("df c-state") || q.Contains("cpb") || q.Contains("core performance boost") || q.Contains("pss") || q.Contains("cool'n'quiet") || q.Contains("smt") || q.Contains("svm") || q.Contains("cppc"))
-            return "CpuPower";
-
-        if (q.Contains("lan") || q.Contains("wlan") || q.Contains("bluetooth") || q.Contains("wifi") || q.Contains("audio") || q.Contains("usb") || q.Contains("sata") || q.Contains("nvme") || q.Contains("rgb") || q.Contains("led"))
+        // 2. Peripherals (Thunderbolt, USB, Network, Audio, RGB)
+        // Must NEVER leak into Fans / Power (even if help string says "Wake Up Command" or "Power")
+        if (q.Contains("thunderbolt") || q.Contains("usb") || q.Contains("xhci") || q.Contains("ehci") ||
+            q.Contains("type-c") || q.Contains("wlan") || q.Contains("wifi") || q.Contains("wi-fi") ||
+            q.Contains("bluetooth") || q.Contains("audio") || q.Contains("azalia") || q.Contains("rgb") ||
+            q.Contains("mystic light") || q.Contains("pldr") ||
+            Regex.IsMatch(q, @"\blan\b", RegexOptions.IgnoreCase))
+        {
             return "Peripherals";
+        }
+
+        // 3. PCIe & Bus Subsystem (ASPM, Bifurcation, Lanes, ReBAR)
+        if (q.Contains("aspm") || q.Contains("bifurcation") || q.Contains("pcie") || q.Contains("pci express") ||
+            q.Contains("peg ") || q.Contains("link state") || q.Contains("l0s") || q.Contains("l1 entry") ||
+            q.Contains("link width") || q.Contains("re-size bar") || q.Contains("resize bar") || q.Contains("rebar") ||
+            q.Contains("above 4g") || q.Contains("smart access memory") || q.Contains("primary video") || q.Contains("discrete gpu"))
+        {
+            return "ASPM";
+        }
+
+        // 4. DRAM & Memory (Timings, Voltages, Resistances, Frequencies)
+        // Must NEVER leak into CPU Overclocking!
+        if (IsMemoryTimingQuestion(question) ||
+            q.Contains("dram") || q.Contains("memory") || q.Contains("cas latency") ||
+            q.Contains("procodt") || q.Contains("rttnom") || q.Contains("rttwr") || q.Contains("rttpark") ||
+            q.Contains("csodt") || q.Contains("cad bus") || q.Contains("gear down mode") ||
+            q.Contains("power down enable") || q.Contains("cmd2t") || q.Contains("command rate") ||
+            q.Contains("fclk") || q.Contains("infinity fabric") || q.Contains("uclk") || q.Contains("mclk") ||
+            q.Contains("a-xmp") || q.Contains("expo") || q.Contains("vddio") || q.Contains("vddp") ||
+            q.Contains("soc voltage") || q.Contains("dram voltage") || q.Contains("vddcr_soc") ||
+            q.Contains("interleaving"))
+        {
+            return "Memory";
+        }
+
+        // 5. Cooling & Fans (Fan profiles, thermal throttling, VRM switching)
+        if (q.Contains("fan ") || q.Contains("fan mode") || q.Contains("fan control") || q.Contains("fan curve") ||
+            q.Contains("fan step") || q.Contains("system fan") || q.Contains("cpu fan") || q.Contains("pump fan") ||
+            q.Contains("smart fan") || q.Contains("tjmax") || q.Contains("thermal throttle") ||
+            q.Contains("temperature source") || q.Contains("vrm switching") || q.Contains("vrm spread"))
+        {
+            return "CoolingPower";
+        }
+
+        // 6. CPU Overclocking & PBO
+        if (q.Contains("pbo") || q.Contains("precision boost") || q.Contains("curve optimizer") ||
+            q.Contains("scalar") || q.Contains("ppt limit") || q.Contains("tdc limit") ||
+            q.Contains("edc limit") || q.Contains("boost clock") || q.Contains("cpu ratio") ||
+            q.Contains("core ratio") || q.Contains("vcore"))
+        {
+            return "Overclocking";
+        }
+
+        // 7. CPU Power & Sleep States (C-States, CPPC, CPB, SMT, Topology)
+        if (q.Contains("c-state") || q.Contains("cstate") || q.Contains("global c-state") ||
+            q.Contains("df c-state") || q.Contains("cpb") || q.Contains("core performance boost") ||
+            q.Contains("pss") || q.Contains("cool'n'quiet") || q.Contains("smt") || q.Contains("svm") ||
+            q.Contains("cppc") || q.Contains("downcore") || q.Contains("ccd control") ||
+            q.Contains("processor cores") || q.Contains("power supply idle"))
+        {
+            return "CpuPower";
+        }
 
         return "Other";
+    }
+
+    public static string DetermineSubCategory(string question, string help, string category)
+    {
+        var q = (question + " " + help).ToLowerInvariant();
+        var qName = question.Trim().ToLowerInvariant();
+
+        // 1. Memory Subcategories
+        if (category == "Memory" || IsMemoryTimingQuestion(question))
+        {
+            // Primary Timings: tCL, tRCDRD, tRCDWR, tRP, tRAS, tRC, CAS Latency
+            if (qName.StartsWith("tcl") || qName.StartsWith("cas latency") ||
+                qName.StartsWith("trcdrd") || qName.StartsWith("trcdwr") ||
+                qName.StartsWith("trp") || qName.StartsWith("tras") ||
+                (qName.StartsWith("trc") && !qName.StartsWith("trcpb") && !qName.StartsWith("trcpage") && !qName.StartsWith("trcd")) ||
+                q.Contains("cas latency (tcl)") || q.Contains("ras# to cas#") || q.Contains("row precharge"))
+            {
+                return "PrimaryTimings";
+            }
+
+            // Tertiary Timings: tRDRD, tWRWR, tRDWR, tWRRD, tRCpage, tRCpb
+            if (q.Contains("trdrd") || q.Contains("twrwr") || q.Contains("trdwr") ||
+                q.Contains("twrrd") || q.Contains("trcpage") || q.Contains("trcpb"))
+            {
+                return "TertiaryTimings";
+            }
+
+            // Terminations & GDM: ProcODT, Rtt, CAD Bus, GDM, PDE, Cmd2T, tRFC, tREFI
+            if (q.Contains("procodt") || q.Contains("rttnom") || q.Contains("rttwr") ||
+                q.Contains("rttpark") || q.Contains("csodt") || q.Contains("cad bus") ||
+                q.Contains("gear down mode") || q.Contains("power down enable") ||
+                q.Contains("cmd2t") || q.Contains("command rate") || q.Contains("trfc") ||
+                q.Contains("trefi") || q.Contains("tcke") || q.Contains("drv"))
+            {
+                return "TerminationsGdm";
+            }
+
+            // Secondary Timings: tFAW, tRRD, tWTR, tWR, tCWL, tRTP
+            if (q.Contains("tfaw") || q.Contains("trrd") || q.Contains("twtr") ||
+                qName.StartsWith("twr") || Regex.IsMatch(q, @"\btwr\b") || q.Contains("tcwl") || q.Contains("trtp") ||
+                q.Contains("write recovery") || q.Contains("four activate"))
+            {
+                return "SecondaryTimings";
+            }
+
+            // Voltages: DRAM Voltage, VDDIO, VDDP, SoC Voltage
+            if (q.Contains("voltage") || q.Contains("vddio") || q.Contains("vddp") ||
+                q.Contains("soc voltage") || q.Contains("vddcr") || q.Contains("vpp") ||
+                q.Contains("dram vdd"))
+            {
+                return "Voltages";
+            }
+
+            // Frequency & Fabric: FCLK, UCLK, MCLK, Frequency, Interleaving, A-XMP, EXPO
+            if (q.Contains("frequency") || q.Contains("clock") || q.Contains("fclk") ||
+                q.Contains("uclk") || q.Contains("mclk") || q.Contains("fabric") ||
+                q.Contains("interleaving") || q.Contains("xmp") || q.Contains("expo") ||
+                q.Contains("multiplier"))
+            {
+                return "Frequency";
+            }
+
+            return "PrimaryTimings";
+        }
+
+        // 2. PCIe Subcategories
+        if (category == "ASPM")
+        {
+            // ReBar: Re-Size BAR, Above 4G, SAM, Primary Video
+            if (q.Contains("re-size") || q.Contains("resize") || q.Contains("rebar") ||
+                q.Contains("above 4g") || q.Contains("bar support") ||
+                q.Contains("smart access memory") || q.Contains("primary video") ||
+                q.Contains("gpu hotplug"))
+            {
+                return "ReBar";
+            }
+
+            // Bifurcation & Speed: Bifurcation, Lanes configuration, Link speed, Gen1..5
+            if (q.Contains("bifurcation") || q.Contains("lanes configuration") ||
+                q.Contains("link speed") || q.Contains("pcie speed") ||
+                q.Contains("gen1") || q.Contains("gen2") || q.Contains("gen3") ||
+                q.Contains("gen4") || q.Contains("gen5") || q.Contains("link width") ||
+                q.Contains("chipset link"))
+            {
+                return "BifurcationSpeed";
+            }
+
+            // ASPM & L1: ASPM Support, PM L1 SS, L0s, L1 entry
+            if (q.Contains("aspm") || q.Contains("l1") || q.Contains("l0s") ||
+                q.Contains("link state") || q.Contains("active state power"))
+            {
+                return "AspmL1";
+            }
+
+            return "AspmL1";
+        }
+
+        // 3. CPU Overclocking & CPU Power Subcategories
+        if (category == "Overclocking" || category == "CpuPower")
+        {
+            // PBO Limits: PPT, TDC, EDC, Platform Power
+            if (q.Contains("ppt limit") || q.Contains("tdc limit") || q.Contains("edc limit") ||
+                q.Contains("power limit") || q.Contains("package power") || q.Contains("platform power"))
+            {
+                return "PboLimits";
+            }
+
+            // PBO & Curve Optimizer: Curve Optimizer, PBO, Boost clock override, Scalar, CPB
+            if (q.Contains("curve optimizer") || q.Contains("pbo") || q.Contains("precision boost") ||
+                q.Contains("boost clock") || q.Contains("scalar") || q.Contains("cpb") ||
+                q.Contains("core performance boost") || q.Contains("max boost") ||
+                q.Contains("cpu ratio") || q.Contains("core ratio") || q.Contains("vcore"))
+            {
+                return "PboCurve";
+            }
+
+            // CPU Topology: SMT, CCD Control, Core Control, Downcore, Virtualization / SVM
+            if (q.Contains("smt") || q.Contains("simultaneous multithreading") ||
+                q.Contains("ccd control") || q.Contains("core control") ||
+                q.Contains("downcore") || q.Contains("active processor cores") ||
+                q.Contains("svm") || q.Contains("virtualization") || q.Contains("nx bit"))
+            {
+                return "CpuTopology";
+            }
+
+            // CPU Power States: C-States, DF C-States, CPPC, PSS, Cool'n'Quiet, Power supply idle
+            if (q.Contains("c-state") || q.Contains("cstate") || q.Contains("df c-state") ||
+                q.Contains("global c-state") || q.Contains("cppc") || q.Contains("preferred cores") ||
+                q.Contains("pss") || q.Contains("cool'n'quiet") || q.Contains("idle control") ||
+                q.Contains("power supply idle") || q.Contains("core c6"))
+            {
+                return "CpuPowerStates";
+            }
+
+            return category == "Overclocking" ? "PboCurve" : "CpuPowerStates";
+        }
+
+        // 4. Cooling & Power Subcategories
+        if (category == "CoolingPower")
+        {
+            if (q.Contains("thermal") || q.Contains("tjmax") || q.Contains("throttle") ||
+                q.Contains("temperature source"))
+            {
+                return "ThermalLimits";
+            }
+
+            if (q.Contains("vrm") || q.Contains("switching frequency") || q.Contains("phase") ||
+                q.Contains("spread spectrum"))
+            {
+                return "VrmPower";
+            }
+
+            return "FanProfiles";
+        }
+
+        // 5. Peripherals Subcategories
+        if (category == "Peripherals")
+        {
+            if (q.Contains("usb") || q.Contains("thunderbolt") || q.Contains("xhci") ||
+                q.Contains("ehci") || q.Contains("type-c"))
+            {
+                return "UsbThunderbolt";
+            }
+
+            if (q.Contains("audio") || q.Contains("azalia") || q.Contains("sound") ||
+                q.Contains("rgb") || q.Contains("led") || q.Contains("mystic light"))
+            {
+                return "AudioRgb";
+            }
+
+            if (Regex.IsMatch(q, @"\blan\b", RegexOptions.IgnoreCase) || q.Contains("wlan") ||
+                q.Contains("wifi") || q.Contains("wi-fi") || q.Contains("bluetooth") ||
+                q.Contains("network") || q.Contains("ethernet") || q.Contains("pldr"))
+            {
+                return "Network";
+            }
+
+            return "Network";
+        }
+
+        // 6. Boot & Security Subcategories
+        if (category == "BootSecurity")
+        {
+            if (q.Contains("ftpm") || q.Contains("security device") || q.Contains("trusted computing") ||
+                q.Contains("secure boot") || q.Contains("chassis intrusion") || q.Contains("tpm"))
+            {
+                return "SecurityTpm";
+            }
+
+            if (q.Contains("sata") || q.Contains("ahci") || q.Contains("raid") ||
+                q.Contains("nvme raid") || q.Contains("raidxpert"))
+            {
+                return "StorageRaid";
+            }
+
+            if (q.Contains("boot") || q.Contains("csm") || q.Contains("post delay") ||
+                q.Contains("numlock") || q.Contains("quiet boot"))
+            {
+                return "BootParams";
+            }
+
+            return "BootParams";
+        }
+
+        return "General";
     }
 
     public static string DetermineSafety(string question, string help, string category)

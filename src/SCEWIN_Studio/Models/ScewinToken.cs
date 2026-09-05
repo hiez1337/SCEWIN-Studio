@@ -51,7 +51,35 @@ public partial class ScewinToken : ObservableObject
     public bool NumericHasAngleBrackets { get; set; }
 
     public string Category { get; set; } = "Other";
+    public string SubCategory { get; set; } = "General";
     public string SafetyLevel { get; set; } = "Safe"; // Safe, Advanced, Warning
+
+    public string SubCategoryBadgeText => SubCategory switch
+    {
+        "PboCurve" => "PBO & Curve",
+        "PboLimits" => "Лимиты мощности",
+        "CpuPowerStates" => "C-States & CPPC",
+        "CpuTopology" => "Ядра & SMT",
+        "PrimaryTimings" => "Первичные тайминги",
+        "SecondaryTimings" => "Вторичные тайминги",
+        "TertiaryTimings" => "Третичные тайминги",
+        "TerminationsGdm" => "Сопротивления & GDM",
+        "Voltages" => "Напряжения памяти",
+        "Frequency" => "Частоты & Шина",
+        "AspmL1" => "ASPM & L1 Substates",
+        "BifurcationSpeed" => "Bifurcation & Скорость",
+        "ReBar" => "Re-Size BAR & Above 4G",
+        "FanProfiles" => "Вентиляторы",
+        "ThermalLimits" => "Температурные лимиты",
+        "VrmPower" => "Питание VRM",
+        "Network" => "Сетевые адаптеры",
+        "UsbThunderbolt" => "USB & Thunderbolt",
+        "AudioRgb" => "Звук & Подсветка",
+        "BootParams" => "Параметры загрузки",
+        "SecurityTpm" => "Безопасность & TPM",
+        "StorageRaid" => "Накопители & RAID",
+        _ => SubCategory
+    };
 
 
     public bool HasOptions => Options.Count > 0;
@@ -245,18 +273,26 @@ public partial class ScewinToken : ObservableObject
         get
         {
             var q = (Question + " " + HelpString).ToLowerInvariant();
-            if (q.Contains("c-state") || q.Contains("sleep") || q.Contains("power saving") || q.Contains("deep sleep"))
+            if (SubCategory == "CpuPowerStates" || q.Contains("c-state") || q.Contains("sleep") || q.Contains("power saving") || q.Contains("deep sleep"))
                 return "\uEC46"; // Crescent Moon / Sleep
-            if (q.Contains("curve") || q.Contains("pbo") || q.Contains("overclock") || q.Contains("voltage") || q.Contains("frequency") || q.Contains("ratio"))
+            if (SubCategory == "PboCurve" || SubCategory == "PboLimits" || q.Contains("curve") || q.Contains("pbo") || q.Contains("overclock") || q.Contains("voltage") || q.Contains("frequency") || q.Contains("ratio"))
                 return "\uE9E9"; // Sliders / Tuning
-            if (q.Contains("bifurcation") || q.Contains("lane") || q.Contains("slot"))
+            if (SubCategory == "AspmL1" || SubCategory == "BifurcationSpeed" || SubCategory == "ReBar" || q.Contains("bifurcation") || q.Contains("lane") || q.Contains("slot") || q.Contains("aspm") || q.Contains("pcie") || q.Contains("pci") || q.Contains("express") || q.Contains("link width"))
                 return "\uE765"; // PCIe / Expansion Board
-            if (q.Contains("aspm") || q.Contains("pcie") || q.Contains("pci") || q.Contains("express") || q.Contains("link width"))
-                return "\uE765"; // PCIe / Expansion Board
-            if (Category == "Memory" || HasMemoryTier || q.Contains("memory") || q.Contains("dram") || q.Contains("timing") || q.Contains("fclk") || q.Contains("mclk") || q.Contains("tcl") || q.Contains("trcd") || q.Contains("trp") || q.Contains("tras") || q.Contains("cas"))
+            if (Category == "Memory" || HasMemoryTier || SubCategory == "PrimaryTimings" || SubCategory == "SecondaryTimings" || SubCategory == "TertiaryTimings" || SubCategory == "TerminationsGdm" || SubCategory == "Voltages" || SubCategory == "Frequency" || q.Contains("memory") || q.Contains("dram") || q.Contains("timing") || q.Contains("fclk") || q.Contains("mclk") || q.Contains("tcl") || q.Contains("trcd") || q.Contains("trp") || q.Contains("tras") || q.Contains("cas"))
                 return "\uE950"; // Memory / RAM Chip
             if (q.Contains("bar") || q.Contains("re-size") || q.Contains("above 4g"))
-                return "\uE950"; // Memory / BAR
+                return "\uE765"; // Memory / BAR
+            if (SubCategory == "FanProfiles" || SubCategory == "ThermalLimits" || SubCategory == "VrmPower" || q.Contains("fan") || q.Contains("thermal"))
+                return "\uE945"; // Thermal / Power
+            if (SubCategory == "Network" || q.Contains("lan") || q.Contains("wifi") || q.Contains("ethernet"))
+                return "\uE839"; // Network
+            if (SubCategory == "UsbThunderbolt" || q.Contains("usb") || q.Contains("thunderbolt"))
+                return "\uE88E"; // USB
+            if (SubCategory == "AudioRgb" || q.Contains("audio") || q.Contains("rgb"))
+                return "\uE74F"; // Audio
+            if (SubCategory == "BootParams" || SubCategory == "SecurityTpm" || SubCategory == "StorageRaid" || q.Contains("boot") || q.Contains("tpm"))
+                return "\uE72E"; // Lock / Security
             if (q.Contains("cpu") || q.Contains("core") || q.Contains("processor") || q.Contains("thread"))
                 return "\uE950"; // CPU Chip
             return "\uE71D"; // General setting / slider

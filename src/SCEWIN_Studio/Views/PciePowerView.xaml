@@ -15,11 +15,79 @@
                        Foreground="#FFFFFF" />
             <TextBlock Text="{Binding L10n[Pcie_AspmDesc]}"
                        FontSize="13"
-                       Margin="0,6,0,20"
+                       Margin="0,6,0,16"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
 
+            <!-- SubCategory Filter Pills -->
+            <WrapPanel Margin="0,0,0,16">
+                <Button Content="{Binding L10n[Filter_All]}"
+                        Command="{Binding SetPcieSubCategoryCommand}"
+                        CommandParameter="All">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding PcieSubCategory}" Value="All">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="{Binding L10n[Filter_AspmL1]}"
+                        Command="{Binding SetPcieSubCategoryCommand}"
+                        CommandParameter="AspmL1">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding PcieSubCategory}" Value="AspmL1">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="{Binding L10n[Filter_BifurcationSpeed]}"
+                        Command="{Binding SetPcieSubCategoryCommand}"
+                        CommandParameter="BifurcationSpeed">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding PcieSubCategory}" Value="BifurcationSpeed">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="{Binding L10n[Filter_ReBar]}"
+                        Command="{Binding SetPcieSubCategoryCommand}"
+                        CommandParameter="ReBar">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding PcieSubCategory}" Value="ReBar">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </WrapPanel>
+
             <!-- Tokens list -->
-            <ItemsControl ItemsSource="{Binding AspmTokens}">
+            <ItemsControl ItemsSource="{Binding FilteredAspmTokens}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <controls:TokenCard />

@@ -14,10 +14,94 @@
                        Foreground="#FFFFFF" />
             <TextBlock Text="{Binding L10n[Cpu_CStatesDesc]}"
                        FontSize="13"
-                       Margin="0,6,0,20"
+                       Margin="0,6,0,16"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
 
-            <ItemsControl ItemsSource="{Binding CpuTokens}">
+            <!-- SubCategory Filter Pills -->
+            <WrapPanel Margin="0,0,0,16">
+                <Button Content="{Binding L10n[Filter_All]}"
+                        Command="{Binding SetCpuPowerSubCategoryCommand}"
+                        CommandParameter="All">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding CpuPowerSubCategory}" Value="All">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="{Binding L10n[Filter_CpuPowerStates]}"
+                        Command="{Binding SetCpuPowerSubCategoryCommand}"
+                        CommandParameter="CpuPowerStates">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding CpuPowerSubCategory}" Value="CpuPowerStates">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="{Binding L10n[Filter_CpuTopology]}"
+                        Command="{Binding SetCpuPowerSubCategoryCommand}"
+                        CommandParameter="CpuTopology">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding CpuPowerSubCategory}" Value="CpuTopology">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="{Binding L10n[Filter_PboLimits]}"
+                        Command="{Binding SetCpuPowerSubCategoryCommand}"
+                        CommandParameter="PboLimits">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding CpuPowerSubCategory}" Value="PboLimits">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="{Binding L10n[Filter_PboCurve]}"
+                        Command="{Binding SetCpuPowerSubCategoryCommand}"
+                        CommandParameter="PboCurve">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding CpuPowerSubCategory}" Value="PboCurve">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </WrapPanel>
+
+            <ItemsControl ItemsSource="{Binding FilteredCpuTokens}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <controls:TokenCard />

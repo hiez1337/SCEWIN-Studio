@@ -53,15 +53,46 @@
                     <TextBlock Text="{Binding L10n[Raw_CategoryFilter]}" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                     <ComboBox SelectedValue="{Binding RawCategoryFilter, Mode=TwoWay}"
                               SelectedValuePath="Tag"
-                              MinWidth="140"
+                              MinWidth="200"
                               Height="34">
                         <ComboBoxItem Content="Все категории" Tag="All" IsSelected="True" />
+                        <Separator />
                         <ComboBoxItem Content="PCIe &amp; ASPM" Tag="ASPM" />
                         <ComboBoxItem Content="AMD Разгон / PBO" Tag="Overclocking" />
                         <ComboBoxItem Content="Память и Тайминги" Tag="Memory" />
                         <ComboBoxItem Content="Процессор и C-States" Tag="CpuPower" />
-                        <ComboBoxItem Content="Периферия" Tag="Peripherals" />
+                        <ComboBoxItem Content="Охлаждение и VRM" Tag="CoolingPower" />
+                        <ComboBoxItem Content="Встроенная периферия" Tag="Peripherals" />
+                        <ComboBoxItem Content="Загрузка и безопасность" Tag="BootSecurity" />
                         <ComboBoxItem Content="Прочие токены" Tag="Other" />
+                        <Separator />
+                        <ComboBoxItem Content="• PBO &amp; Curve Optimizer" Tag="PboCurve" />
+                        <ComboBoxItem Content="• Лимиты мощности (PPT/TDC)" Tag="PboLimits" />
+                        <ComboBoxItem Content="• C-States и энергосбережение" Tag="CpuPowerStates" />
+                        <ComboBoxItem Content="• Топология ядер и SMT" Tag="CpuTopology" />
+                        <Separator />
+                        <ComboBoxItem Content="• Первичные тайминги" Tag="PrimaryTimings" />
+                        <ComboBoxItem Content="• Вторичные тайминги" Tag="SecondaryTimings" />
+                        <ComboBoxItem Content="• Третичные тайминги" Tag="TertiaryTimings" />
+                        <ComboBoxItem Content="• Сопротивления &amp; GDM" Tag="TerminationsGdm" />
+                        <ComboBoxItem Content="• Напряжения памяти" Tag="Voltages" />
+                        <ComboBoxItem Content="• Частоты &amp; Шина" Tag="Frequency" />
+                        <Separator />
+                        <ComboBoxItem Content="• ASPM &amp; L1 Substates" Tag="AspmL1" />
+                        <ComboBoxItem Content="• Bifurcation &amp; Скорость" Tag="BifurcationSpeed" />
+                        <ComboBoxItem Content="• Re-Size BAR &amp; Above 4G" Tag="ReBar" />
+                        <Separator />
+                        <ComboBoxItem Content="• Профили вентиляторов" Tag="FanProfiles" />
+                        <ComboBoxItem Content="• Температурные лимиты" Tag="ThermalLimits" />
+                        <ComboBoxItem Content="• Питание VRM" Tag="VrmPower" />
+                        <Separator />
+                        <ComboBoxItem Content="• Сетевые адаптеры" Tag="Network" />
+                        <ComboBoxItem Content="• USB &amp; Thunderbolt" Tag="UsbThunderbolt" />
+                        <ComboBoxItem Content="• Звук &amp; Подсветка" Tag="AudioRgb" />
+                        <Separator />
+                        <ComboBoxItem Content="• Параметры загрузки" Tag="BootParams" />
+                        <ComboBoxItem Content="• Безопасность &amp; TPM" Tag="SecurityTpm" />
+                        <ComboBoxItem Content="• Накопители &amp; RAID" Tag="StorageRaid" />
                     </ComboBox>
                 </StackPanel>
 

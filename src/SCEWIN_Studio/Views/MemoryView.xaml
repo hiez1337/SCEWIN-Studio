@@ -18,6 +18,122 @@
                        Margin="0,6,0,16"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
 
+            <!-- SubCategory Filter Pills -->
+            <WrapPanel Margin="0,0,0,16">
+                <Button Content="{Binding L10n[Filter_All]}"
+                        Command="{Binding SetMemorySubCategoryCommand}"
+                        CommandParameter="All">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding MemorySubCategory}" Value="All">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="{Binding L10n[Filter_PrimaryTimings]}"
+                        Command="{Binding SetMemorySubCategoryCommand}"
+                        CommandParameter="PrimaryTimings">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding MemorySubCategory}" Value="PrimaryTimings">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="{Binding L10n[Filter_SecondaryTimings]}"
+                        Command="{Binding SetMemorySubCategoryCommand}"
+                        CommandParameter="SecondaryTimings">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding MemorySubCategory}" Value="SecondaryTimings">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="{Binding L10n[Filter_TertiaryTimings]}"
+                        Command="{Binding SetMemorySubCategoryCommand}"
+                        CommandParameter="TertiaryTimings">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding MemorySubCategory}" Value="TertiaryTimings">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="{Binding L10n[Filter_TerminationsGdm]}"
+                        Command="{Binding SetMemorySubCategoryCommand}"
+                        CommandParameter="TerminationsGdm">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding MemorySubCategory}" Value="TerminationsGdm">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="{Binding L10n[Filter_Voltages]}"
+                        Command="{Binding SetMemorySubCategoryCommand}"
+                        CommandParameter="Voltages">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding MemorySubCategory}" Value="Voltages">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="{Binding L10n[Filter_Frequency]}"
+                        Command="{Binding SetMemorySubCategoryCommand}"
+                        CommandParameter="Frequency">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding MemorySubCategory}" Value="Frequency">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </WrapPanel>
+
             <!-- AM4 Architecture Explainer Banner -->
             <Border CornerRadius="8"
                     Background="#182533"
@@ -56,7 +172,7 @@
                     <Style TargetType="StackPanel">
                         <Setter Property="Visibility" Value="Visible" />
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasPrimaryCbsTokens}" Value="False">
+                            <DataTrigger Binding="{Binding HasFilteredPrimaryCbsTokens}" Value="False">
                                 <Setter Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
                         </Style.Triggers>
@@ -89,7 +205,7 @@
                     </Border>
                 </Grid>
 
-                <ItemsControl ItemsSource="{Binding PrimaryCbsMemoryTokens}">
+                <ItemsControl ItemsSource="{Binding FilteredPrimaryCbsMemoryTokens}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <controls:TokenCard />
@@ -108,7 +224,7 @@
                     <Style TargetType="Border">
                         <Setter Property="Visibility" Value="Collapsed" />
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasMsiOverlayTokens}" Value="True">
+                            <DataTrigger Binding="{Binding HasFilteredMsiOverlayTokens}" Value="True">
                                 <Setter Property="Visibility" Value="Visible" />
                             </DataTrigger>
                         </Style.Triggers>
@@ -144,7 +260,7 @@
                                    TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                    Margin="0,0,0,12" />
-                        <ItemsControl ItemsSource="{Binding MsiOverlayMemoryTokens}">
+                        <ItemsControl ItemsSource="{Binding FilteredMsiOverlayMemoryTokens}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <controls:TokenCard />
@@ -165,7 +281,7 @@
                     <Style TargetType="Border">
                         <Setter Property="Visibility" Value="Collapsed" />
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasPbsDuplicateTokens}" Value="True">
+                            <DataTrigger Binding="{Binding HasFilteredPbsDuplicateTokens}" Value="True">
                                 <Setter Property="Visibility" Value="Visible" />
                             </DataTrigger>
                         </Style.Triggers>
@@ -201,7 +317,7 @@
                                    TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                    Margin="0,0,0,12" />
-                        <ItemsControl ItemsSource="{Binding PbsDuplicateMemoryTokens}">
+                        <ItemsControl ItemsSource="{Binding FilteredPbsDuplicateMemoryTokens}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <controls:TokenCard />
@@ -218,18 +334,18 @@
                     <Style TargetType="StackPanel">
                         <Setter Property="Visibility" Value="Collapsed" />
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasGeneralMemoryTokens}" Value="True">
+                            <DataTrigger Binding="{Binding HasFilteredGeneralMemoryTokens}" Value="True">
                                 <Setter Property="Visibility" Value="Visible" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                <TextBlock Text="Общие параметры контроллера памяти (DRAM / Interleaving)"
+                <TextBlock Text="Общие параметры контроллера памяти (DRAM / Interleaving / Voltages)"
                            FontWeight="SemiBold"
                            FontSize="15"
                            Foreground="#FFFFFF"
                            Margin="0,8,0,12" />
-                <ItemsControl ItemsSource="{Binding GeneralMemoryTokens}">
+                <ItemsControl ItemsSource="{Binding FilteredGeneralMemoryTokens}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <controls:TokenCard />
@@ -246,16 +362,16 @@
                         <Style.Triggers>
                             <MultiDataTrigger>
                                 <MultiDataTrigger.Conditions>
-                                    <Condition Binding="{Binding HasPrimaryCbsTokens}" Value="False" />
-                                    <Condition Binding="{Binding HasMsiOverlayTokens}" Value="False" />
-                                    <Condition Binding="{Binding HasPbsDuplicateTokens}" Value="False" />
+                                    <Condition Binding="{Binding HasFilteredPrimaryCbsTokens}" Value="False" />
+                                    <Condition Binding="{Binding HasFilteredMsiOverlayTokens}" Value="False" />
+                                    <Condition Binding="{Binding HasFilteredPbsDuplicateTokens}" Value="False" />
                                 </MultiDataTrigger.Conditions>
                                 <Setter Property="Visibility" Value="Visible" />
                             </MultiDataTrigger>
                         </Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                <ItemsControl ItemsSource="{Binding MemoryTokens}">
+                <ItemsControl ItemsSource="{Binding FilteredMemoryTokens}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <controls:TokenCard />
