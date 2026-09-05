@@ -294,8 +294,17 @@
                     </ui:NavigationViewItem>
                 </ui:NavigationView.FooterMenuItems>
 
-                <!-- Hosted View Content -->
-                <ContentControl x:Name="ContentHost" />
+                <!-- Hosted Pre-rendered Views Container (Instant tab switching with zero lag) -->
+                <Grid x:Name="ViewsContainer">
+                    <views:DashboardView x:Name="ViewDashboard" Visibility="Visible" />
+                    <views:PciePowerView x:Name="ViewPciePower" Visibility="Collapsed" />
+                    <views:OverclockingView x:Name="ViewOverclocking" Visibility="Collapsed" />
+                    <views:MemoryView x:Name="ViewMemory" Visibility="Collapsed" />
+                    <views:CpuPowerView x:Name="ViewCpuPower" Visibility="Collapsed" />
+                    <views:RawTokensView x:Name="ViewRawTokens" Visibility="Collapsed" />
+                    <views:ProfilesDiffView x:Name="ViewProfilesDiff" Visibility="Collapsed" />
+                    <views:SettingsView x:Name="ViewSettings" Visibility="Collapsed" />
+                </Grid>
             </ui:NavigationView>
 
             <!-- Right Dock: Live Pending Changes / Diff Viewer -->

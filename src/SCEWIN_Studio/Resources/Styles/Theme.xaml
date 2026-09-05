@@ -229,4 +229,41 @@
         </Setter>
     </Style>
 
+    <!-- WinUI 3 Fluent Card ComboBox Style -->
+    <Style x:Key="FluentCardComboBoxStyle" TargetType="ComboBox">
+        <Setter Property="ui:ControlHelper.CornerRadius" Value="6" />
+        <Setter Property="Background" Value="#292929" />
+        <Setter Property="BorderBrush" Value="#3D3D3D" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Foreground" Value="#FFFFFF" />
+        <Setter Property="Height" Value="34" />
+        <Setter Property="Padding" Value="12,5,10,5" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <!-- WinUI 3 Fluent Card Numeric Input TextBox Style -->
+    <Style x:Key="FluentCardNumericTextBoxStyle" TargetType="TextBox">
+        <Setter Property="ui:ControlHelper.CornerRadius" Value="6" />
+        <Setter Property="Background" Value="#222222" />
+        <Setter Property="BorderBrush" Value="#3D3D3D" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Foreground" Value="#FFFFFF" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="TextAlignment" Value="Center" />
+    </Style>
+
+    <!-- WinUI 3 Fluent Stepper Increment/Decrement Button Style -->
+    <Style x:Key="FluentStepperButtonStyle" TargetType="Button" BasedOn="{StaticResource HeaderActionButtonStyle}">
+        <Setter Property="Width" Value="30" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
 </ResourceDictionary>

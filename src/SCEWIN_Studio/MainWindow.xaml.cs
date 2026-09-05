@@ -24,14 +24,29 @@ public partial class MainWindow : Window
 
     private void InitializeViews()
     {
-        _views["Dashboard"] = new DashboardView();
-        _views["PciePower"] = new PciePowerView();
-        _views["Overclocking"] = new OverclockingView();
-        _views["Memory"] = new MemoryView();
-        _views["CpuPower"] = new CpuPowerView();
-        _views["RawTokens"] = new RawTokensView();
-        _views["ProfilesDiff"] = new ProfilesDiffView();
-        _views["Settings"] = new SettingsView();
+        _views["Dashboard"] = ViewDashboard;
+        _views["PciePower"] = ViewPciePower;
+        _views["Overclocking"] = ViewOverclocking;
+        _views["Memory"] = ViewMemory;
+        _views["CpuPower"] = ViewCpuPower;
+        _views["RawTokens"] = ViewRawTokens;
+        _views["ProfilesDiff"] = ViewProfilesDiff;
+        _views["Settings"] = ViewSettings;
+
+        // Pre-bind DataContext to all views
+        foreach (var view in _views.Values)
+        {
+            view.DataContext = _vm;
+        }
+
+        // Asynchronously warm up all views layout in the background so tabs switch at 0ms latency
+        Dispatcher.InvokeAsync(() =>
+        {
+            foreach (var view in _views.Values)
+            {
+                view.Measure(new Size(1000, 800));
+            }
+        }, System.Windows.Threading.DispatcherPriority.Background);
     }
 
     private void OnNavItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
@@ -44,10 +59,13 @@ public partial class MainWindow : Window
 
     public void NavigateTo(string tag)
     {
-        if (_views.TryGetValue(tag, out var view))
+        if (_views.ContainsKey(tag))
         {
-            view.DataContext = _vm;
-            ContentHost.Content = view;
+            foreach (var pair in _views)
+            {
+                pair.Value.Visibility = (pair.Key == tag) ? Visibility.Visible : Visibility.Collapsed;
+            }
+
             _vm.CurrentNavView = tag;
 
             // Sync NavView selection

@@ -283,12 +283,12 @@
                             </Style.Triggers>
                         </Style>
                     </StackPanel.Style>
-                    <ComboBox ItemsSource="{Binding Options}"
+                    <ComboBox Style="{StaticResource FluentCardComboBoxStyle}"
+                              ItemsSource="{Binding Options}"
                               SelectedItem="{Binding CurrentOption, Mode=TwoWay}"
                               DisplayMemberPath="FormattedDisplayText"
                               MinWidth="190"
-                              MaxWidth="280"
-                              Height="34" />
+                              MaxWidth="280" />
                 </StackPanel>
 
                 <!-- ToggleSwitch for binary (Enabled/Disabled, On/Off) options -->
@@ -333,18 +333,14 @@
                     </StackPanel.Style>
                     <Button Content="−"
                             Command="{Binding DecrementNumericCommand}"
-                            Width="30" Height="32"
-                            Style="{StaticResource HeaderActionButtonStyle}"
-                            Padding="0" />
-                    <TextBox Text="{Binding CustomNumericValue, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
-                             Width="60" Height="32"
-                             Margin="4,0"
-                             TextAlignment="Center" />
+                            Style="{StaticResource FluentStepperButtonStyle}" />
+                    <TextBox Style="{StaticResource FluentCardNumericTextBoxStyle}"
+                             Text="{Binding CustomNumericValue, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                             Width="60"
+                             Margin="4,0" />
                     <Button Content="+"
                             Command="{Binding IncrementNumericCommand}"
-                            Width="30" Height="32"
-                            Style="{StaticResource HeaderActionButtonStyle}"
-                            Padding="0" />
+                            Style="{StaticResource FluentStepperButtonStyle}" />
 
                     <!-- 0 = Auto badge for MSI Click BIOS overlay -->
                     <Border Margin="8,0,0,0"
@@ -371,9 +367,9 @@
 
                 <!-- Standard text box when non-stepper free value -->
                 <TextBox Text="{Binding CustomNumericValue, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
-                         MinWidth="120" Height="34">
+                         MinWidth="120">
                     <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource DefaultTextBoxStyle}">
+                        <Style TargetType="TextBox" BasedOn="{StaticResource FluentCardNumericTextBoxStyle}">
                             <Setter Property="Visibility" Value="Collapsed" />
                             <Style.Triggers>
                                 <MultiDataTrigger>
