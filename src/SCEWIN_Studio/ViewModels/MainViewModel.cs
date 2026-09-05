@@ -49,7 +49,7 @@ public partial class MainViewModel : ObservableObject
     private string _currentNavView = "Dashboard";
 
     [ObservableProperty]
-    private string _motherboardSummary = "MSI MPG B550 GAMING PLUS (BIOS 1.M2 | CRC32: F1F849CA)";
+    private string _motherboardSummary = "Системная плата (UEFI BIOS)";
 
     [ObservableProperty]
     private string _navSearchQuery = string.Empty;
@@ -224,34 +224,9 @@ public partial class MainViewModel : ObservableObject
             if (dumpFiles.Count > 0)
             {
                 LoadDumpFromFile(dumpFiles[0]);
-                return;
             }
         }
         catch { }
-
-        var possibleDumps = new List<string>
-        {
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "nvramBEFORE.txt"),
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestData", "nvramBEFORE.txt"),
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "src", "SCEWIN_Studio", "nvramBEFORE.txt"),
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "src", "SCEWIN_Studio", "nvramBEFORE.txt")
-        };
-
-        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        if (!string.IsNullOrEmpty(userProfile))
-        {
-            possibleDumps.Add(Path.Combine(userProfile, "Downloads", "Скрипты и Конфиги", "SCEHUB-main", "SCEHUB-main", "SCEWIN", "5.05.01.0002", "nvramBEFORE.txt"));
-        }
-
-        foreach (var path in possibleDumps)
-        {
-            var fullPath = Path.GetFullPath(path);
-            if (File.Exists(fullPath))
-            {
-                LoadDumpFromFile(fullPath);
-                break;
-            }
-        }
     }
 
     [RelayCommand]
@@ -840,29 +815,90 @@ public partial class MainViewModel : ObservableObject
 
     public void UpdateMotherboardSummary()
     {
+        string boardName = string.Empty;
+        string biosText = string.Empty;
+
         try
         {
             using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"HARDWARE\DESCRIPTION\System\BIOS");
             if (key != null)
             {
-                var prod = key.GetValue("BaseBoardProduct")?.ToString()?.Trim();
-                var ver = key.GetValue("BIOSVersion")?.ToString()?.Trim();
-                if (!string.IsNullOrEmpty(prod))
+                var mfr = key.GetValue("BaseBoardManufacturer")?.ToString()?.Trim() ?? "";
+                if (string.IsNullOrEmpty(mfr) || mfr.Contains("To be filled", StringComparison.OrdinalIgnoreCase))
                 {
-                    var boardName = prod.Contains("MS-") ? prod.Split('(')[0].Trim() : prod;
-                    if (!boardName.StartsWith("MSI", StringComparison.OrdinalIgnoreCase))
-                        boardName = "MSI " + boardName;
-                    var biosText = !string.IsNullOrEmpty(ver) ? $"BIOS {ver}" : "BIOS 1.M2";
-                    var crc = CurrentDump?.HiiCrc32 ?? "F1F849CA";
-                    MotherboardSummary = $"{boardName} ({biosText} | CRC32: {crc})";
-                    return;
+                    mfr = key.GetValue("SystemManufacturer")?.ToString()?.Trim() ?? "";
+                }
+
+                var prod = key.GetValue("BaseBoardProduct")?.ToString()?.Trim() ?? "";
+                if (string.IsNullOrEmpty(prod) || prod.Contains("To be filled", StringComparison.OrdinalIgnoreCase))
+                {
+                    prod = key.GetValue("SystemProductName")?.ToString()?.Trim() ?? "";
+                }
+
+                var ver = key.GetValue("BIOSVersion")?.ToString()?.Trim() ?? "";
+
+                // Normalize vendor names
+                string cleanMfr = mfr switch
+                {
+                    var s when s.Contains("ASUSTeK", StringComparison.OrdinalIgnoreCase) || s.Contains("ASUS", StringComparison.OrdinalIgnoreCase) => "ASUS",
+                    var s when s.Contains("Micro-Star", StringComparison.OrdinalIgnoreCase) || s.Contains("MSI", StringComparison.OrdinalIgnoreCase) => "MSI",
+                    var s when s.Contains("Gigabyte", StringComparison.OrdinalIgnoreCase) => "GIGABYTE",
+                    var s when s.Contains("ASRock", StringComparison.OrdinalIgnoreCase) => "ASRock",
+                    var s when s.Contains("EVGA", StringComparison.OrdinalIgnoreCase) => "EVGA",
+                    var s when s.Contains("NZXT", StringComparison.OrdinalIgnoreCase) => "NZXT",
+                    var s when s.Contains("Colorful", StringComparison.OrdinalIgnoreCase) => "COLORFUL",
+                    var s when s.Contains("Biostar", StringComparison.OrdinalIgnoreCase) => "BIOSTAR",
+                    _ => mfr
+                };
+
+                // Clean product name (e.g. "MPG B550 GAMING PLUS (MS-7C56)" -> "MPG B550 GAMING PLUS")
+                string cleanProd = prod;
+                if (cleanProd.Contains("MS-") && cleanProd.Contains("("))
+                {
+                    cleanProd = cleanProd.Split('(')[0].Trim();
+                }
+
+                if (!string.IsNullOrEmpty(cleanProd))
+                {
+                    if (!string.IsNullOrEmpty(cleanMfr) &&
+                        !cleanProd.StartsWith(cleanMfr, StringComparison.OrdinalIgnoreCase) &&
+                        !cleanMfr.Contains("To be filled", StringComparison.OrdinalIgnoreCase))
+                    {
+                        boardName = $"{cleanMfr} {cleanProd}";
+                    }
+                    else
+                    {
+                        boardName = cleanProd;
+                    }
+                }
+                else if (!string.IsNullOrEmpty(cleanMfr) && !cleanMfr.Contains("To be filled", StringComparison.OrdinalIgnoreCase))
+                {
+                    boardName = cleanMfr;
+                }
+
+                if (!string.IsNullOrEmpty(ver) && !ver.Contains("To be filled", StringComparison.OrdinalIgnoreCase))
+                {
+                    biosText = $"BIOS {ver}";
                 }
             }
         }
         catch { }
 
-        var defaultCrc = CurrentDump?.HiiCrc32 ?? "F1F849CA";
-        MotherboardSummary = $"MSI MPG B550 GAMING PLUS (BIOS 1.M2 | CRC32: {defaultCrc})";
+        if (string.IsNullOrEmpty(boardName) || boardName.Contains("To be filled", StringComparison.OrdinalIgnoreCase))
+        {
+            boardName = "Системная плата";
+        }
+
+        if (string.IsNullOrEmpty(biosText))
+        {
+            biosText = "UEFI BIOS";
+        }
+
+        var crcInfo = CurrentDump != null
+            ? $"CRC32: {CurrentDump.HiiCrc32}"
+            : (L10n.IsRussian ? "Дамп не загружен" : "No dump loaded");
+
+        MotherboardSummary = $"{boardName} ({biosText} | {crcInfo})";
     }
 
     [RelayCommand]
