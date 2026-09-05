@@ -4,74 +4,606 @@
              xmlns:ui="http://schemas.modernwpf.com/2019"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="800">
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
-        <StackPanel MaxWidth="1000">
-            <TextBlock Text="{Binding L10n[Nav_ProfilesDiff]}"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="850">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="{Binding L10n[Diff_CompareTitle]}"
                        FontWeight="Bold"
                        FontSize="24"
                        Foreground="#FFFFFF" />
-            <TextBlock Text="{Binding L10n[Diff_Summary]}"
+            <TextBlock Text="{Binding L10n[Diff_CompareSubtitle]}"
                        FontSize="13"
-                       Margin="0,4,0,20"
+                       Margin="0,4,0,12"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
 
-            <!-- Actions Bar -->
+            <!-- SECTION 1: Dual Dump Selection Cards -->
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Profile A Card -->
+                <Border Grid.Column="0"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
+                            <Border Background="#162740" BorderBrush="#255A8E" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                                <TextBlock Text="ПРОФИЛЬ А" FontSize="11" FontWeight="Bold" Foreground="#60CDFF" />
+                            </Border>
+                            <TextBlock Text="{Binding L10n[Diff_ProfileA_Header]}" FontWeight="SemiBold" FontSize="14" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="1"
+                                   Text="{Binding ComparisonDumpAInfo}"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   TextTrimming="CharacterEllipsis"
+                                   Margin="0,0,0,6" />
+
+                        <TextBlock Grid.Row="2"
+                                   Text="{Binding ComparisonDumpAPath}"
+                                   FontSize="11"
+                                   FontFamily="Consolas"
+                                   Foreground="#888888"
+                                   TextTrimming="CharacterEllipsis"
+                                   Margin="0,0,0,12" />
+
+                        <StackPanel Grid.Row="3" Orientation="Horizontal">
+                            <Button Content="{Binding L10n[Diff_Btn_LoadDumpA]}"
+                                    Style="{StaticResource HeaderActionButtonStyle}"
+                                    Command="{Binding LoadComparisonDumpACommand}"
+                                    Margin="0,0,8,0" />
+                            <Button Content="{Binding L10n[Diff_Btn_UseCurrentDump]}"
+                                    Style="{StaticResource HeaderActionButtonStyle}"
+                                    Command="{Binding UseCurrentDumpAsACommand}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Profile B Card -->
+                <Border Grid.Column="2"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
+                            <Border Background="#2B1638" BorderBrush="#6C3A82" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                                <TextBlock Text="ПРОФИЛЬ Б" FontSize="11" FontWeight="Bold" Foreground="#D8B4FE" />
+                            </Border>
+                            <TextBlock Text="{Binding L10n[Diff_ProfileB_Header]}" FontWeight="SemiBold" FontSize="14" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="1"
+                                   Text="{Binding ComparisonDumpBInfo}"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   TextTrimming="CharacterEllipsis"
+                                   Margin="0,0,0,6" />
+
+                        <TextBlock Grid.Row="2"
+                                   Text="{Binding ComparisonDumpBPath}"
+                                   FontSize="11"
+                                   FontFamily="Consolas"
+                                   Foreground="#888888"
+                                   TextTrimming="CharacterEllipsis"
+                                   Margin="0,0,0,12" />
+
+                        <StackPanel Grid.Row="3" Orientation="Horizontal">
+                            <Button Content="{Binding L10n[Diff_Btn_LoadDumpB]}"
+                                    Style="{StaticResource HeaderActionButtonStyle}"
+                                    Command="{Binding LoadComparisonDumpBCommand}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Compare Button & Export Actions Row -->
             <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                     BorderThickness="1"
                     CornerRadius="8"
-                    Padding="16"
-                    Margin="0,0,0,16">
+                    Padding="16,10"
+                    Margin="0,8,0,0">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="Операции с конфигурацией" FontWeight="SemiBold" FontSize="14" Foreground="#FFFFFF" />
-                        <TextBlock Text="Вы можете экспортировать только измененные параметры в формате официального скрипта SCEWIN."
-                                   FontSize="12" Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="{Binding L10n[Diff_Btn_RunCompare]}"
+                                Style="{StaticResource FluentAccentButtonStyle}"
+                                Command="{Binding RunComparisonCommand}"
+                                Height="36"
+                                Padding="20,0"
+                                Margin="0,0,12,0" />
+
+                        <Button Content="{Binding L10n[Diff_Btn_ExportReport]}"
+                                Style="{StaticResource HeaderActionButtonStyle}"
+                                Command="{Binding ExportComparisonReportCommand}"
+                                Height="36"
+                                IsEnabled="{Binding HasComparisonResults}" />
                     </StackPanel>
 
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Content="{Binding L10n[Btn_ExportDiffScript]}"
-                                Style="{StaticResource HeaderActionButtonStyle}"
-                                Margin="0,0,8,0"
-                                Command="{Binding ExportDiffScriptCommand}" />
-
-                        <Button Content="{Binding L10n[Btn_ResetAll]}"
-                                Style="{StaticResource HeaderActionButtonStyle}"
-                                Margin="0,0,8,0"
-                                Command="{Binding ResetAllChangesCommand}" />
-
-                        <Button Content="{Binding L10n[Btn_ApplyDiff]}"
-                                Style="{StaticResource FluentAccentButtonStyle}"
-                                Command="{Binding ApplyChangesCommand}" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
+                        <TextBlock Text="Поддерживаются дампы AM4 (B550/X570) и AM5 (X670/B650/X870)"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   VerticalAlignment="Center" />
                     </StackPanel>
                 </Grid>
             </Border>
-
-            <!-- Table of diffs -->
-            <TextBlock Text="Список модифицированных параметров" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,12" />
-
-            <DataGrid ItemsSource="{Binding PendingDiffs}"
-                      AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      HeadersVisibility="Column"
-                      GridLinesVisibility="Horizontal"
-                      MinHeight="250"
-                      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Token ID" Binding="{Binding TokenId}" Width="90" />
-                    <DataGridTextColumn Header="Offset" Binding="{Binding Offset}" Width="80" />
-                    <DataGridTextColumn Header="Название параметра" Binding="{Binding Question}" Width="2*" />
-                    <DataGridTextColumn Header="Исходное значение" Binding="{Binding OldValue}" Width="*" />
-                    <DataGridTextColumn Header="Новое значение" Binding="{Binding NewValue}" Width="*" />
-                </DataGrid.Columns>
-            </DataGrid>
-
         </StackPanel>
-    </ScrollViewer>
+
+        <!-- SECTION 2 & 3: Summary Stats & Filters -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,12" Visibility="{Binding HasComparisonResults, Converter={StaticResource BoolToVis}}">
+            <!-- SECTION 2: Summary Stats Badges -->
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Total Badge -->
+                <Border Grid.Column="0" Background="#242424" BorderBrush="#383838" BorderThickness="1" CornerRadius="6" Padding="12,8">
+                    <StackPanel>
+                        <TextBlock Text="Всего настроек" FontSize="11" Foreground="#9E9E9E" />
+                        <TextBlock Text="{Binding TotalComparedCount}" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,2,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Different Badge -->
+                <Border Grid.Column="2" Background="#321619" BorderBrush="#8A2A2B" BorderThickness="1" CornerRadius="6" Padding="12,8">
+                    <StackPanel>
+                        <TextBlock Text="Различаются" FontSize="11" Foreground="#FFA39E" />
+                        <TextBlock Text="{Binding DifferentCount}" FontSize="18" FontWeight="Bold" Foreground="#FF5252" Margin="0,2,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Equal Badge -->
+                <Border Grid.Column="4" Background="#122B1B" BorderBrush="#236B3B" BorderThickness="1" CornerRadius="6" Padding="12,8">
+                    <StackPanel>
+                        <TextBlock Text="Совпадают" FontSize="11" Foreground="#86EFAC" />
+                        <TextBlock Text="{Binding EqualCount}" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" Margin="0,2,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Only in A Badge -->
+                <Border Grid.Column="6" Background="#11263C" BorderBrush="#1D5D9B" BorderThickness="1" CornerRadius="6" Padding="12,8">
+                    <StackPanel>
+                        <TextBlock Text="Только в Профиле А" FontSize="11" Foreground="#93C5FD" />
+                        <TextBlock Text="{Binding OnlyInACount}" FontSize="18" FontWeight="Bold" Foreground="#40A9FF" Margin="0,2,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Only in B Badge -->
+                <Border Grid.Column="8" Background="#241838" BorderBrush="#6C3A82" BorderThickness="1" CornerRadius="6" Padding="12,8">
+                    <StackPanel>
+                        <TextBlock Text="Только в Профиле Б" FontSize="11" Foreground="#D8B4FE" />
+                        <TextBlock Text="{Binding OnlyInBCount}" FontSize="18" FontWeight="Bold" Foreground="#B37FEB" Margin="0,2,0,0" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- SECTION 3: Filter Chips & Search Bar -->
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16,10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Search Box -->
+                    <TextBox Grid.Column="0"
+                             Text="{Binding ComparisonSearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                             ui:ControlHelper.PlaceholderText="{Binding L10n[Diff_SearchPlaceholder]}"
+                             ui:ControlHelper.CornerRadius="6"
+                             Height="34"
+                             Margin="0,0,16,0" />
+
+                    <!-- Filter Pill Buttons -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Все"
+                                Command="{Binding SetComparisonFilterCommand}"
+                                CommandParameter="All"
+                                Margin="0,0,6,0">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource HeaderActionButtonStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ComparisonFilter}" Value="All">
+                                            <Setter Property="Background" Value="#383838" />
+                                            <Setter Property="BorderBrush" Value="#60CDFF" />
+                                            <Setter Property="Foreground" Value="#60CDFF" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+
+                        <Button Content="Только различия"
+                                Command="{Binding SetComparisonFilterCommand}"
+                                CommandParameter="Different"
+                                Margin="0,0,6,0">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource HeaderActionButtonStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ComparisonFilter}" Value="Different">
+                                            <Setter Property="Background" Value="#3A1818" />
+                                            <Setter Property="BorderBrush" Value="#FF5252" />
+                                            <Setter Property="Foreground" Value="#FFA39E" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+
+                        <Button Content="Совпадающие"
+                                Command="{Binding SetComparisonFilterCommand}"
+                                CommandParameter="Equal"
+                                Margin="0,0,6,0">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource HeaderActionButtonStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ComparisonFilter}" Value="Equal">
+                                            <Setter Property="Background" Value="#163820" />
+                                            <Setter Property="BorderBrush" Value="#4CAF50" />
+                                            <Setter Property="Foreground" Value="#86EFAC" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+
+                        <Button Content="Только в А"
+                                Command="{Binding SetComparisonFilterCommand}"
+                                CommandParameter="OnlyA"
+                                Margin="0,0,6,0">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource HeaderActionButtonStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ComparisonFilter}" Value="OnlyA">
+                                            <Setter Property="Background" Value="#162740" />
+                                            <Setter Property="BorderBrush" Value="#40A9FF" />
+                                            <Setter Property="Foreground" Value="#93C5FD" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+
+                        <Button Content="Только в Б"
+                                Command="{Binding SetComparisonFilterCommand}"
+                                CommandParameter="OnlyB">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource HeaderActionButtonStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ComparisonFilter}" Value="OnlyB">
+                                            <Setter Property="Background" Value="#281B38" />
+                                            <Setter Property="BorderBrush" Value="#B37FEB" />
+                                            <Setter Property="Foreground" Value="#D8B4FE" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </StackPanel>
+
+        <!-- SECTION 4: Virtualized Table / ListView of compared settings -->
+        <!-- Results ListView (shown when HasComparisonResults) -->
+        <ListView Grid.Row="2"
+                  ItemsSource="{Binding FilteredComparisonItems}"
+                  Background="Transparent"
+                  BorderThickness="0"
+                  Padding="0"
+                  HorizontalContentAlignment="Stretch"
+                  ScrollViewer.CanContentScroll="True"
+                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  VirtualizingPanel.ScrollUnit="Pixel"
+                  VirtualizingPanel.CacheLength="2"
+                  Visibility="{Binding HasComparisonResults, Converter={StaticResource BoolToVis}}">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderThickness" Value="0" />
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="Margin" Value="0,0,0,8" />
+                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListViewItem">
+                                <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="14,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <!-- Left accent line indicator -->
+                                <ColumnDefinition Width="4" />
+                                <ColumnDefinition Width="12" />
+                                <!-- Question details -->
+                                <ColumnDefinition Width="2*" />
+                                <ColumnDefinition Width="16" />
+                                <!-- Value in Dump A -->
+                                <ColumnDefinition Width="1.5*" />
+                                <ColumnDefinition Width="32" />
+                                <!-- Value in Dump B -->
+                                <ColumnDefinition Width="1.5*" />
+                                <ColumnDefinition Width="16" />
+                                <!-- Status Badge -->
+                                <ColumnDefinition Width="110" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Color indicator bar -->
+                            <Border Grid.Column="0"
+                                    Background="{Binding StatusColor}"
+                                    CornerRadius="2"
+                                    VerticalAlignment="Stretch" />
+
+                            <!-- Setting info -->
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                                    <Border Background="#222222" BorderBrush="#3A3A3A" BorderThickness="1" CornerRadius="4" Padding="5,1" Margin="0,0,6,0">
+                                        <TextBlock Text="{Binding Category}" FontSize="10" Foreground="#888888" />
+                                    </Border>
+                                    <TextBlock Text="{Binding TokensSummary}" FontSize="10" FontFamily="Consolas" Foreground="#777777" VerticalAlignment="Center" />
+                                </StackPanel>
+
+                                <TextBlock Text="{Binding Question}"
+                                           FontWeight="SemiBold"
+                                           FontSize="13"
+                                           Foreground="#FFFFFF"
+                                           TextWrapping="Wrap" />
+
+                                <TextBlock Text="{Binding HelpString}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                           TextTrimming="CharacterEllipsis"
+                                           Margin="0,2,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <Trigger Property="Text" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <!-- Value in Dump A -->
+                            <Border Grid.Column="4"
+                                    Background="#222222"
+                                    BorderBrush="#333333"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="10,6"
+                                    VerticalAlignment="Center">
+                                <StackPanel>
+                                    <TextBlock Text="Профиль А" FontSize="10" Foreground="#60CDFF" FontWeight="SemiBold" Margin="0,0,0,2" />
+                                    <TextBlock Text="{Binding ValueA}"
+                                               FontSize="12"
+                                               FontWeight="Medium"
+                                               Foreground="#FFFFFF"
+                                               TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Symbol between values -->
+                            <TextBlock Grid.Column="5"
+                                       Text="{Binding ComparisonSymbol}"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       Foreground="{Binding StatusColor}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+
+                            <!-- Value in Dump B -->
+                            <Border Grid.Column="6"
+                                    Background="#222222"
+                                    BorderBrush="#333333"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="10,6"
+                                    VerticalAlignment="Center">
+                                <StackPanel>
+                                    <TextBlock Text="Профиль Б" FontSize="10" Foreground="#D8B4FE" FontWeight="SemiBold" Margin="0,0,0,2" />
+                                    <TextBlock Text="{Binding ValueB}"
+                                               FontSize="12"
+                                               FontWeight="Medium"
+                                               Foreground="#FFFFFF"
+                                               TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Status Badge -->
+                            <Border Grid.Column="8"
+                                    Background="{Binding StatusBackground}"
+                                    BorderBrush="{Binding StatusBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="8,6"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Center">
+                                <TextBlock Text="{Binding StatusBadgeText}"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           Foreground="{Binding StatusColor}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            </Border>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <!-- No Results Empty State Card -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="32"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                MaxWidth="650">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasComparisonResults}" Value="False">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <StackPanel HorizontalAlignment="Center">
+                <TextBlock Text="🔍" FontSize="36" HorizontalAlignment="Center" Margin="0,0,0,12" />
+                <TextBlock Text="Сравнение двух дампов BIOS не запущено"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           Foreground="#FFFFFF"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,8" />
+                <TextBlock Text="{Binding L10n[Diff_NoResults]}"
+                           FontSize="13"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,16" />
+                <Button Content="{Binding L10n[Diff_Btn_RunCompare]}"
+                        Style="{StaticResource FluentAccentButtonStyle}"
+                        Command="{Binding RunComparisonCommand}"
+                        HorizontalAlignment="Center"
+                        Padding="24,0"
+                        Height="36" />
+            </StackPanel>
+        </Border>
+
+        <!-- SECTION 5: Bottom bar with Pending Changes toggle / Expander -->
+        <Border Grid.Row="3"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16,10"
+                Margin="0,12,0,0">
+            <Expander Header="{Binding L10n[Diff_PendingChangesHeader]}"
+                      IsExpanded="{Binding HasModifiedItems, Mode=OneWay}"
+                      Foreground="#FFFFFF">
+                <StackPanel Margin="0,10,0,0">
+                    <!-- Actions Bar for Pending Changes -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding L10n[Diff_Summary]}"
+                                   FontSize="12"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Content="{Binding L10n[Btn_ExportDiffScript]}"
+                                    Style="{StaticResource HeaderActionButtonStyle}"
+                                    Margin="0,0,8,0"
+                                    Command="{Binding ExportDiffScriptCommand}" />
+
+                            <Button Content="{Binding L10n[Btn_ResetAll]}"
+                                    Style="{StaticResource HeaderActionButtonStyle}"
+                                    Margin="0,0,8,0"
+                                    Command="{Binding ResetAllChangesCommand}" />
+
+                            <Button Content="{Binding L10n[Btn_ApplyDiff]}"
+                                    Style="{StaticResource FluentAccentButtonStyle}"
+                                    Command="{Binding ApplyChangesCommand}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- DataGrid of pending changes -->
+                    <DataGrid ItemsSource="{Binding PendingDiffs}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal"
+                              MaxHeight="220"
+                              Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Token ID" Binding="{Binding TokenId}" Width="90" />
+                            <DataGridTextColumn Header="Offset" Binding="{Binding Offset}" Width="80" />
+                            <DataGridTextColumn Header="Название параметра" Binding="{Binding Question}" Width="2*" />
+                            <DataGridTextColumn Header="Исходное значение" Binding="{Binding OldValue}" Width="*" />
+                            <DataGridTextColumn Header="Новое значение" Binding="{Binding NewValue}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Expander>
+        </Border>
+    </Grid>
 </UserControl>

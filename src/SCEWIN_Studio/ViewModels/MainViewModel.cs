@@ -23,6 +23,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly IScewinRunner _runner;
     private readonly ISettingsService _settingsService;
     private readonly IScewinDownloader _downloader;
+    private readonly IDumpComparer _dumpComparer;
 
     public ILocalizationService L10n { get; }
 
@@ -63,6 +64,67 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public int ModifiedCount => PendingDiffs.Count;
     public bool HasModifiedItems => PendingDiffs.Count > 0;
+
+    // Dual Dump Comparison properties
+    [ObservableProperty]
+    private ScewinDump? _comparisonDumpA;
+
+    [ObservableProperty]
+    private string _comparisonDumpAPath = string.Empty;
+
+    [ObservableProperty]
+    private string _comparisonDumpAInfo = "Дамп не выбран";
+
+    [ObservableProperty]
+    private ScewinDump? _comparisonDumpB;
+
+    [ObservableProperty]
+    private string _comparisonDumpBPath = string.Empty;
+
+    [ObservableProperty]
+    private string _comparisonDumpBInfo = "Дамп не выбран";
+
+    [ObservableProperty]
+    private string _comparisonFilter = "All"; // All, Different, Equal, OnlyA, OnlyB
+
+    [ObservableProperty]
+    private string _comparisonSearchQuery = string.Empty;
+
+    [ObservableProperty]
+    private int _totalComparedCount;
+
+    [ObservableProperty]
+    private int _differentCount;
+
+    [ObservableProperty]
+    private int _equalCount;
+
+    [ObservableProperty]
+    private int _onlyInACount;
+
+    [ObservableProperty]
+    private int _onlyInBCount;
+
+    public bool HasComparisonResults => TotalComparedCount > 0;
+    public bool CanRunComparison => ComparisonDumpA != null && ComparisonDumpB != null;
+
+    public ObservableRangeCollection<DumpComparisonItem> AllComparisonItems { get; } = new();
+    public ObservableRangeCollection<DumpComparisonItem> FilteredComparisonItems { get; } = new();
+
+    partial void OnComparisonDumpAChanged(ScewinDump? value)
+    {
+        UpdateComparisonDumpAInfo();
+        OnPropertyChanged(nameof(CanRunComparison));
+    }
+
+    partial void OnComparisonDumpBChanged(ScewinDump? value)
+    {
+        UpdateComparisonDumpBInfo();
+        OnPropertyChanged(nameof(CanRunComparison));
+    }
+
+    partial void OnComparisonFilterChanged(string value) => UpdateComparisonFilter(immediate: true);
+    partial void OnComparisonSearchQueryChanged(string value) => TriggerComparisonFilterDebounced();
 
     partial void OnCurrentDumpChanged(ScewinDump? value)
     {
@@ -165,7 +227,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         new ScewinRunner(),
         new SettingsService(),
         new ScewinDownloader(),
-        LocalizationService.Instance)
+        LocalizationService.Instance,
+        new DumpComparer())
     {
     }
 
@@ -175,13 +238,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IScewinRunner runner,
         ISettingsService settingsService,
         IScewinDownloader downloader,
-        ILocalizationService l10n)
+        ILocalizationService l10n,
+        IDumpComparer? dumpComparer = null)
     {
         _parser = parser;
         _detector = detector;
         _runner = runner;
         _settingsService = settingsService;
         _downloader = downloader;
+        _dumpComparer = dumpComparer ?? new DumpComparer();
         L10n = l10n;
 
         L10n.LanguageChanged += () =>
@@ -350,6 +415,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
         GeneralMemoryTokens.Clear();
         CpuTokens.Clear();
         PendingDiffs.Clear();
+
+        if (ComparisonDumpA == null)
+        {
+            ComparisonDumpA = dump;
+            ComparisonDumpAPath = !string.IsNullOrEmpty(dump.FilePath) ? dump.FilePath : "Текущий профиль BIOS";
+            UpdateComparisonDumpAInfo();
+        }
 
         foreach (var token in dump.Tokens)
         {
@@ -1315,11 +1387,361 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    // ==========================================
+    // Dual Dump Comparison Commands & Logic
+    // ==========================================
+
+    private CancellationTokenSource? _comparisonSearchCts;
+
+    [RelayCommand]
+    public void LoadComparisonDumpA()
+    {
+        var ofd = new OpenFileDialog
+        {
+            Title = "Выберите дамп BIOS для Профиля А",
+            Filter = "BIOS NVRAM Dumps (*.txt)|*.txt|All Files (*.*)|*.*"
+        };
+
+        if (ofd.ShowDialog() == true)
+        {
+            try
+            {
+                var content = File.ReadAllText(ofd.FileName);
+                var dump = _parser.Parse(content, ofd.FileName);
+                ComparisonDumpA = dump;
+                ComparisonDumpAPath = ofd.FileName;
+                UpdateComparisonDumpAInfo();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при загрузке дампа: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+
+    [RelayCommand]
+    public void UseCurrentDumpAsA()
+    {
+        if (CurrentDump == null)
+        {
+            MessageBox.Show("Текущий дамп BIOS не загружен. Загрузите дамп или считайте его из BIOS.", "Сравнение дампов", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        ComparisonDumpA = CurrentDump;
+        ComparisonDumpAPath = !string.IsNullOrEmpty(CurrentDump.FilePath) ? CurrentDump.FilePath : "Текущий профиль BIOS";
+        UpdateComparisonDumpAInfo();
+    }
+
+    [RelayCommand]
+    public void LoadComparisonDumpB()
+    {
+        var ofd = new OpenFileDialog
+        {
+            Title = "Выберите дамп BIOS для Профиля Б (например, профиль друга)",
+            Filter = "BIOS NVRAM Dumps (*.txt)|*.txt|All Files (*.*)|*.*"
+        };
+
+        if (ofd.ShowDialog() == true)
+        {
+            try
+            {
+                var content = File.ReadAllText(ofd.FileName);
+                var dump = _parser.Parse(content, ofd.FileName);
+                ComparisonDumpB = dump;
+                ComparisonDumpBPath = ofd.FileName;
+                UpdateComparisonDumpBInfo();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при загрузке дампа: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+
+    [RelayCommand]
+    public void RunComparison()
+    {
+        if (ComparisonDumpA == null || ComparisonDumpB == null)
+        {
+            MessageBox.Show("Пожалуйста, загрузите оба дампа (Профиль А и Профиль Б) перед запуском сравнения.", "Сравнение дампов", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var items = _dumpComparer.Compare(ComparisonDumpA, ComparisonDumpB);
+        TotalComparedCount = items.Count;
+        DifferentCount = items.Count(i => i.IsDifferent);
+        EqualCount = items.Count(i => i.IsEqual);
+        OnlyInACount = items.Count(i => i.IsOnlyInA);
+        OnlyInBCount = items.Count(i => i.IsOnlyInB);
+
+        OnPropertyChanged(nameof(HasComparisonResults));
+
+        AllComparisonItems.ReplaceRange(items);
+        UpdateComparisonFilter(immediate: true);
+    }
+
+    [RelayCommand]
+    public void SetComparisonFilter(string filter)
+    {
+        ComparisonFilter = filter;
+    }
+
+    public void TriggerComparisonFilterDebounced(int delayMs = 120)
+    {
+        _comparisonSearchCts?.Cancel();
+        _comparisonSearchCts?.Dispose();
+
+        var cts = new CancellationTokenSource();
+        _comparisonSearchCts = cts;
+        var token = cts.Token;
+
+        _ = ExecuteComparisonFilterAsync(delayMs, token);
+    }
+
+    private async Task ExecuteComparisonFilterAsync(int delayMs, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (delayMs > 0)
+            {
+                await Task.Delay(delayMs, cancellationToken);
+            }
+
+            if (cancellationToken.IsCancellationRequested) return;
+
+            var all = AllComparisonItems.ToList();
+            var filter = ComparisonFilter ?? "All";
+            var query = (ComparisonSearchQuery ?? string.Empty).Trim();
+
+            var matches = await Task.Run(() =>
+            {
+                var list = new List<DumpComparisonItem>();
+                foreach (var item in all)
+                {
+                    if (cancellationToken.IsCancellationRequested) return list;
+
+                    // Status filter
+                    if (filter == "Different" && !item.IsDifferent) continue;
+                    if (filter == "Equal" && !item.IsEqual) continue;
+                    if (filter == "OnlyA" && !item.IsOnlyInA) continue;
+                    if (filter == "OnlyB" && !item.IsOnlyInB) continue;
+
+                    // Search query filter
+                    if (!string.IsNullOrEmpty(query))
+                    {
+                        bool match = item.Question.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                     item.ValueA.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                     item.ValueB.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                     item.TokenA.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                     item.TokenB.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                     item.Category.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                     item.SubCategory.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                     item.HelpString.Contains(query, StringComparison.OrdinalIgnoreCase);
+
+                        if (!match) continue;
+                    }
+
+                    list.Add(item);
+                }
+                return list;
+            }, cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested) return;
+
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher != null && !dispatcher.CheckAccess())
+            {
+                await dispatcher.InvokeAsync(() =>
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        FilteredComparisonItems.ReplaceRange(matches);
+                    }
+                });
+            }
+            else
+            {
+                FilteredComparisonItems.ReplaceRange(matches);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    public void UpdateComparisonFilter(bool immediate = true)
+    {
+        if (immediate)
+        {
+            _comparisonSearchCts?.Cancel();
+            _comparisonSearchCts?.Dispose();
+            _comparisonSearchCts = null;
+
+            var filter = ComparisonFilter ?? "All";
+            var query = (ComparisonSearchQuery ?? string.Empty).Trim();
+
+            var matches = new List<DumpComparisonItem>();
+            foreach (var item in AllComparisonItems)
+            {
+                if (filter == "Different" && !item.IsDifferent) continue;
+                if (filter == "Equal" && !item.IsEqual) continue;
+                if (filter == "OnlyA" && !item.IsOnlyInA) continue;
+                if (filter == "OnlyB" && !item.IsOnlyInB) continue;
+
+                if (!string.IsNullOrEmpty(query))
+                {
+                    bool match = item.Question.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                 item.ValueA.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                 item.ValueB.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                 item.TokenA.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                 item.TokenB.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                 item.Category.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                 item.SubCategory.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                 item.HelpString.Contains(query, StringComparison.OrdinalIgnoreCase);
+
+                    if (!match) continue;
+                }
+
+                matches.Add(item);
+            }
+
+            FilteredComparisonItems.ReplaceRange(matches);
+        }
+        else
+        {
+            TriggerComparisonFilterDebounced();
+        }
+    }
+
+    [RelayCommand]
+    public void ExportComparisonReport()
+    {
+        if (AllComparisonItems.Count == 0)
+        {
+            MessageBox.Show("Нет данных для экспорта. Выполните сравнение двух дампов.", "Экспорт отчета", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var sfd = new SaveFileDialog
+        {
+            Title = "Сохранить отчет сравнения дампов BIOS",
+            Filter = "Текстовый отчет (*.txt)|*.txt|Таблица CSV (*.csv)|*.csv|Все файлы (*.*)|*.*",
+            FileName = $"BIOS_Comparison_Report_{DateTime.Now:yyyyMMdd_HHmmss}.txt"
+        };
+
+        if (sfd.ShowDialog() == true)
+        {
+            try
+            {
+                var isCsv = sfd.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase);
+                var sb = new System.Text.StringBuilder();
+
+                if (isCsv)
+                {
+                    sb.AppendLine("Статус,Категория,Параметр,Значение_в_Дамп_А,Токен_А,Смещение_А,Значение_в_Дамп_Б,Токен_Б,Смещение_Б,Описание");
+                    foreach (var item in AllComparisonItems)
+                    {
+                        static string Escape(string s) => $"\"{s.Replace("\"", "\"\"")}\"";
+                        sb.AppendLine($"{Escape(item.StatusBadgeText)},{Escape(item.Category)},{Escape(item.Question)},{Escape(item.ValueA)},{Escape(item.TokenA)},{Escape(item.OffsetA)},{Escape(item.ValueB)},{Escape(item.TokenB)},{Escape(item.OffsetB)},{Escape(item.HelpString)}");
+                    }
+                }
+                else
+                {
+                    sb.AppendLine("================================================================================");
+                    sb.AppendLine("SCEWIN Studio — Отчет сравнения двух дампов BIOS NVRAM");
+                    sb.AppendLine("================================================================================");
+                    sb.AppendLine($"Дата формирования : {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                    sb.AppendLine($"Профиль А         : {ComparisonDumpAPath}");
+                    sb.AppendLine($"                    {ComparisonDumpAInfo}");
+                    sb.AppendLine($"Профиль Б         : {ComparisonDumpBPath}");
+                    sb.AppendLine($"                    {ComparisonDumpBInfo}");
+                    sb.AppendLine("--------------------------------------------------------------------------------");
+                    sb.AppendLine("СВОДНАЯ СТАТИСТИКА:");
+                    sb.AppendLine($"• Всего параметров : {TotalComparedCount}");
+                    sb.AppendLine($"• Различаются      : {DifferentCount}");
+                    sb.AppendLine($"• Совпадают        : {EqualCount}");
+                    sb.AppendLine($"• Только в А       : {OnlyInACount}");
+                    sb.AppendLine($"• Только в Б       : {OnlyInBCount}");
+                    sb.AppendLine("================================================================================");
+                    sb.AppendLine();
+
+                    var diffs = AllComparisonItems.Where(i => i.IsDifferent).ToList();
+                    sb.AppendLine($"=== 1. РАЗЛИЧИЯ ({diffs.Count}) ===");
+                    foreach (var d in diffs)
+                    {
+                        sb.AppendLine($"• [{d.Category}] {d.Question}");
+                        sb.AppendLine($"    Дамп А : {d.ValueA}  (Token: 0x{d.TokenA}, Offset: 0x{d.OffsetA})");
+                        sb.AppendLine($"    Дамп Б : {d.ValueB}  (Token: 0x{d.TokenB}, Offset: 0x{d.OffsetB})");
+                    }
+                    sb.AppendLine();
+
+                    var onlyA = AllComparisonItems.Where(i => i.IsOnlyInA).ToList();
+                    sb.AppendLine($"=== 2. ТОЛЬКО В ПРОФИЛЕ А ({onlyA.Count}) ===");
+                    foreach (var a in onlyA)
+                    {
+                        sb.AppendLine($"• [{a.Category}] {a.Question} = {a.ValueA} (Token: 0x{a.TokenA}, Offset: 0x{a.OffsetA})");
+                    }
+                    sb.AppendLine();
+
+                    var onlyB = AllComparisonItems.Where(i => i.IsOnlyInB).ToList();
+                    sb.AppendLine($"=== 3. ТОЛЬКО В ПРОФИЛЕ Б ({onlyB.Count}) ===");
+                    foreach (var b in onlyB)
+                    {
+                        sb.AppendLine($"• [{b.Category}] {b.Question} = {b.ValueB} (Token: 0x{b.TokenB}, Offset: 0x{b.OffsetB})");
+                    }
+                    sb.AppendLine();
+
+                    var equals = AllComparisonItems.Where(i => i.IsEqual).ToList();
+                    sb.AppendLine($"=== 4. СОВПАДАЮЩИЕ ПАРАМЕТРЫ ({equals.Count}) ===");
+                    foreach (var eq in equals)
+                    {
+                        sb.AppendLine($"• [{eq.Category}] {eq.Question} = {eq.ValueA}");
+                    }
+                }
+
+                File.WriteAllText(sfd.FileName, sb.ToString(), System.Text.Encoding.UTF8);
+                MessageBox.Show($"Отчет успешно сохранен:\n{sfd.FileName}", "Отчет сохранен", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при сохранении отчета: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+
+    private void UpdateComparisonDumpAInfo()
+    {
+        ComparisonDumpAInfo = FormatDumpSummary(ComparisonDumpA, ComparisonDumpAPath);
+    }
+
+    private void UpdateComparisonDumpBInfo()
+    {
+        ComparisonDumpBInfo = FormatDumpSummary(ComparisonDumpB, ComparisonDumpBPath);
+    }
+
+    private static string FormatDumpSummary(ScewinDump? dump, string path)
+    {
+        if (dump == null) return "Дамп не выбран";
+        var fileName = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : "Дамп NVRAM";
+        var tokenCount = $"{dump.Tokens.Count} параметров";
+        var crc = !string.IsNullOrEmpty(dump.HiiCrc32) ? $"CRC32: {dump.HiiCrc32}" : string.Empty;
+        var ver = !string.IsNullOrEmpty(dump.UtilityVersion) ? $"AMI v{dump.UtilityVersion}" : string.Empty;
+
+        var parts = new List<string> { fileName, tokenCount };
+        if (!string.IsNullOrEmpty(crc)) parts.Add(crc);
+        if (!string.IsNullOrEmpty(ver)) parts.Add(ver);
+        return string.Join(" • ", parts);
+    }
+
     public void Dispose()
     {
         _searchCts?.Cancel();
         _searchCts?.Dispose();
         _searchCts = null;
+
+        _comparisonSearchCts?.Cancel();
+        _comparisonSearchCts?.Dispose();
+        _comparisonSearchCts = null;
+
         GC.SuppressFinalize(this);
     }
 }
