@@ -38,6 +38,8 @@
   "Diff_ProposedValues": "Новое значение",
   "Pcie_PageTitle": "PCIe и оптимизация задержек",
   "Badge_Optimal": "Оптимально",
+  "Card_ShowDetails": "Описание и детали ▾",
+  "Card_HideDetails": "Скрыть описание ▴",
   "Btn_Cancel": "Отмена",
   "Btn_Confirm": "Подтвердить",
   "Btn_Close": "Закрыть",

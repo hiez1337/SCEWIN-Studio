@@ -38,6 +38,8 @@
   "Diff_ProposedValues": "Proposed Values",
   "Pcie_PageTitle": "PCIe & Latency Optimization",
   "Badge_Optimal": "Optimal",
+  "Card_ShowDetails": "Description & Details ▾",
+  "Card_HideDetails": "Hide Details ▴",
   "Btn_Cancel": "Cancel",
   "Btn_Confirm": "Confirm",
   "Btn_Close": "Close",

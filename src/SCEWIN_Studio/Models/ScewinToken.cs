@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace SCEWIN_Studio.Models;
 
@@ -93,6 +94,15 @@ public partial class ScewinToken : ObservableObject
         }
     }
 
+    [ObservableProperty]
+    private bool _isDetailsExpanded;
+
+    [RelayCommand]
+    public void ToggleDetails()
+    {
+        IsDetailsExpanded = !IsDetailsExpanded;
+    }
+
     public string DisplayTitle
     {
         get
@@ -102,8 +112,6 @@ public partial class ScewinToken : ObservableObject
                 return "Active State Power Management (ASPM)";
             if (q.Equals("PCIe/GFX Lanes Configuration", StringComparison.OrdinalIgnoreCase))
                 return "PCIe Slot Bifurcation";
-            if (q.Equals("Global C-state Control", StringComparison.OrdinalIgnoreCase))
-                return "Global C-States";
             return q;
         }
     }
