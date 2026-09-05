@@ -9,6 +9,8 @@
         mc:Ignorable="d"
         ui:ThemeManager.IsThemeAware="True"
         ui:WindowHelper.UseModernWindowStyle="True"
+        ui:TitleBar.ExtendViewIntoTitleBar="True"
+        ui:TitleBar.IsIconVisible="False"
         Title="SCEWIN Studio - AMI UEFI NVRAM Editor"
         Height="820" Width="1300"
         MinHeight="600" MinWidth="960"
@@ -22,12 +24,10 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Window Title Row -->
-        <Border Grid.Row="0"
-                Padding="16,0"
-                Background="#202020"
-                BorderBrush="#2A2A2A"
-                BorderThickness="0,0,0,1">
+        <!-- Window Title Row (Integrated into WinUI 3 Fluent Caption) -->
+        <Grid Grid.Row="0"
+              Margin="16,0,140,0"
+              Background="Transparent">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <Image Source="pack://application:,,,/SCEWIN_Studio;component/Resources/app_icon.png" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
                 <TextBlock Text="SCEWIN Studio v1.0 — UEFI NVRAM Configurator"
@@ -36,7 +36,7 @@
                            Foreground="#D4D4D4"
                            VerticalAlignment="Center" />
             </StackPanel>
-        </Border>
+        </Grid>
 
         <!-- Status & Actions Toolbar -->
         <Border Grid.Row="1"

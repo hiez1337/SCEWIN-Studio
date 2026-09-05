@@ -209,4 +209,24 @@
         </Setter>
     </Style>
 
+    <!-- Fluent Spoiler Link Button Style (No focus visual dotted border) -->
+    <Style x:Key="FluentSpoilerHyperlinkButtonStyle" TargetType="Button">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0,2,4,2" />
+        <Setter Property="Margin" Value="0,2,0,0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter Focusable="False" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>

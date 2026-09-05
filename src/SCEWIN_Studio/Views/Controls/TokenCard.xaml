@@ -162,24 +162,9 @@
                 </WrapPanel>
 
                 <!-- Spoiler Toggle Button (Variant 1: Inline Chevron Expander) -->
-                <Button Command="{Binding ToggleDetailsCommand}"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Padding="0,3,8,3"
-                        Margin="0,2,0,0"
-                        HorizontalAlignment="Left"
-                        Cursor="Hand">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <ContentPresenter />
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </Button.Style>
+                <Button Style="{StaticResource FluentSpoilerHyperlinkButtonStyle}"
+                        Command="{Binding ToggleDetailsCommand}"
+                        FocusVisualStyle="{x:Null}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock FontSize="11" Foreground="#60CDFF" VerticalAlignment="Center">
                             <TextBlock.Style>
