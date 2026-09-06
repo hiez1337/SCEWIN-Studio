@@ -86,35 +86,60 @@ public class RenderUiTests
         {
             var window = new MainWindow();
             var solutionRoot = FindSolutionRoot();
-            var dumpPath = Path.Combine(solutionRoot, "src", "SCEWIN_Studio", "nvramBEFORE.txt");
+            var dumpPath = Path.Combine(solutionRoot, "tests", "SCEWIN_Studio.Tests", "TestData", "nvramBEFORE.txt");
+            if (!File.Exists(dumpPath))
+            {
+                dumpPath = Path.Combine(solutionRoot, "src", "SCEWIN_Studio", "nvramBEFORE.txt");
+            }
+
+            var vm = (MainViewModel)window.DataContext;
             if (File.Exists(dumpPath))
             {
-                var vm = (MainViewModel)window.DataContext;
                 vm.LoadDumpFromFile(dumpPath);
             }
 
-            var pages = new[]
+            // Set up dual dump comparison data
+            var dumpBPath = Path.Combine(solutionRoot, "tests", "SCEWIN_Studio.Tests", "TestData", "nvram_dump_20260905_204705.txt");
+            if (File.Exists(dumpBPath))
             {
-                "Dashboard",
-                "PciePower",
-                "Overclocking",
-                "Memory",
-                "CpuPower",
-                "RawTokens",
-                "ProfilesDiff",
-                "Settings"
+                var parser = new Services.ScewinParser();
+                vm.ComparisonDumpA = vm.CurrentDump;
+                vm.ComparisonDumpAPath = "nvram_dump_20260905_202547.txt";
+                vm.ComparisonDumpAInfo = "MSI MPG B550 GAMING PLUS • 1868 параметров";
+                vm.ComparisonDumpB = parser.Parse(File.ReadAllText(dumpBPath), Path.GetFileName(dumpBPath));
+                vm.ComparisonDumpBPath = "nvram_dump_20260905_204705.txt";
+                vm.ComparisonDumpBInfo = "AM5 Profile (Друг) • 3140 параметров";
+                vm.RunComparisonCommand.Execute(null);
+            }
+
+            var screenshotsDir = Path.Combine(solutionRoot, "docs", "screenshots");
+            Directory.CreateDirectory(screenshotsDir);
+
+            var pageMap = new Dictionary<string, string>
+            {
+                { "Dashboard", "01_dashboard.png" },
+                { "Memory", "02_memory_tuning.png" },
+                { "Overclocking", "08_overclocking.png" },
+                { "PciePower", "03_pcie_power.png" },
+                { "CpuPower", "04_cpu_power.png" },
+                { "RawTokens", "05_raw_tokens.png" },
+                { "ProfilesDiff", "06_dual_dump_comparison.png" },
+                { "Settings", "07_settings.png" }
             };
 
             var visual = (UIElement)window.Content;
             visual.Measure(new Size(1350, 850));
             visual.Arrange(new Rect(0, 0, 1350, 850));
 
-            foreach (var page in pages)
+            foreach (var kvp in pageMap)
             {
+                var page = kvp.Key;
+                var fileName = kvp.Value;
+
                 window.NavigateTo(page);
                 visual.UpdateLayout();
 
-                // Pump dispatcher
+                // Pump dispatcher to finish any pending bindings/layout
                 var frame = new System.Windows.Threading.DispatcherFrame();
                 window.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.ApplicationIdle, new Action(() => frame.Continue = false));
                 System.Windows.Threading.Dispatcher.PushFrame(frame);
@@ -125,7 +150,7 @@ public class RenderUiTests
 
                 var encoder = new PngBitmapEncoder();
                 encoder.Frames.Add(BitmapFrame.Create(rtb));
-                var outPath = Path.Combine(solutionRoot, "tests", $"rendered_page_{page}.png");
+                var outPath = Path.Combine(screenshotsDir, fileName);
                 using (var fs = File.Create(outPath))
                 {
                     encoder.Save(fs);

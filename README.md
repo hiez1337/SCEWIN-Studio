@@ -1,10 +1,6 @@
 # SCEWIN Studio
 
 <p align="center">
-  <img src="docs/screenshots/01_dashboard.png" alt="SCEWIN Studio Dashboard" width="900" />
-</p>
-
-<p align="center">
   <a href="https://github.com/hiez1337/SCEWIN-Studio/releases"><img src="https://img.shields.io/github/v/release/hiez1337/SCEWIN-Studio?color=60CDFF&label=Release&logo=github" alt="GitHub Release"></a>
   <a href="https://github.com/hiez1337/SCEWIN-Studio/actions"><img src="https://img.shields.io/github/actions/workflow/status/hiez1337/SCEWIN-Studio/release.yml?branch=main&label=Build%20%26%20Release&logo=githubactions" alt="Build Status"></a>
   <img src="https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet" alt=".NET 8.0">
@@ -21,51 +17,51 @@
 ## 📸 Скриншоты интерфейса / UI Showcase
 
 ### 1. 🖥️ Панель управления (Dashboard)
-Статус подключения к AMI Aptio V, определение материнской платы, версия BIOS, контрольная сумма HII CRC32, быстрые карточки рекомендаций и боковая панель ожидающих изменений (Diff).
+Статус подключения к AMI Aptio V, определение материнской платы, версия BIOS, контрольная сумма HII CRC32, быстрые карточки популярных твиков и боковая панель ожидающих изменений (Diff).
 <p align="center">
-  <img src="docs/screenshots/01_dashboard.png" alt="Dashboard" width="850" />
+  <img src="docs/screenshots/ui/01_dashboard.png" alt="Dashboard" width="850" />
 </p>
 
 ### 2. ⚡ Память и Тайминги (Multi-Tier Architecture)
-Трёхуровневая классификация параметров с разделением на **AMD CBS** (аппаратный уровень AGESA), **MSI Click BIOS OC Engine** (оверлей OEM) и служебные дубликаты **AMD PBS**.
+Трёхуровневая классификация параметров с разделением на **AMD CBS** (аппаратный уровень AGESA), **MSI Click BIOS OC Engine** (оверлей OEM) и служебные дубликаты **AMD PBS**, с чип-фильтрами по группам таймингов.
 <p align="center">
-  <img src="docs/screenshots/02_memory_tuning.png" alt="Memory & Timings" width="850" />
+  <img src="docs/screenshots/ui/02_memory_tuning.png" alt="Memory & Timings" width="850" />
 </p>
 
 ### 3. 🚀 Разгон и Precision Boost Overdrive (PBO)
 Тонкая настройка PBO, Curve Optimizer для каждого ядра с переключателями Positive/Negative и шагами Magnitude, скаляр PBO и лимиты мощности.
 <p align="center">
-  <img src="docs/screenshots/08_overclocking.png" alt="Overclocking & PBO" width="850" />
+  <img src="docs/screenshots/ui/03_overclocking.png" alt="Overclocking & PBO" width="850" />
 </p>
 
 ### 4. 🔌 PCIe, ASPM и Бифуркация линий
-Управление состояниями энергосбережения шины PCI Express (L0s, L1, L1 Substates), ReBAR (Resizable BAR), NVMe RAID и конфигурацией разделения слотов PCIe.
+Управление состояниями энергосбережения шины PCI Express (L0s, L1, L1 Substates), ReBAR (Resizable BAR), Re-Size BAR Support и конфигурацией разделения слотов PCIe.
 <p align="center">
-  <img src="docs/screenshots/03_pcie_power.png" alt="PCIe Power & ASPM" width="850" />
+  <img src="docs/screenshots/ui/04_pcie_power.png" alt="PCIe Power & ASPM" width="850" />
 </p>
 
 ### 5. ⚡ Процессор и C-States
-Управление глобальными состояниями сна ядер (Global C-state Control, DF C-States, CPPC, CPPC Preferred Cores, Core Performance Boost).
+Управление глобальными состояниями сна ядер (Global C-state Control, DF C-States, CPPC, S3/Modern Standby Support, Core Performance Boost).
 <p align="center">
-  <img src="docs/screenshots/04_cpu_power.png" alt="CPU Power & C-States" width="850" />
+  <img src="docs/screenshots/ui/05_cpu_power.png" alt="CPU Power & C-States" width="850" />
 </p>
 
 ### 6. 📋 Каталог всех токенов (Raw Tokens)
 Виртуализированный каталог на 4,000+ параметров NVRAM с мгновенным debounced-поиском, фильтрацией по категориям и чип-фильтрами.
 <p align="center">
-  <img src="docs/screenshots/05_raw_tokens.png" alt="Raw Tokens Catalog" width="850" />
+  <img src="docs/screenshots/ui/06_raw_tokens.png" alt="Raw Tokens Catalog" width="850" />
 </p>
 
 ### 7. 🔍 Двустороннее сравнение дампов BIOS (Dual-Dump Compare)
-Сопоставление двух независимых дампов (например, вашего профиля и профиля друга) с автоматическим обнаружением различий, фильтрацией по категориям и экспортом отчётов.
+Новый мощный интерфейс сопоставления двух независимых дампов (Профиль А vs Профиль Б) с автоматическим подсчётом статистики различий, цветовыми бейджами статусов, фильтрацией и экспортом отчётов.
 <p align="center">
-  <img src="docs/screenshots/06_dual_dump_comparison.png" alt="Dual Dump Comparison" width="850" />
+  <img src="docs/screenshots/ui/07_dual_dump_comparison.png" alt="Dual Dump Comparison" width="850" />
 </p>
 
 ### 8. ⚙️ Настройки и автоматический загрузчик SCEWIN
 Встроенный поиск локальных утилит SCEWIN, проверка драйверов ядра AMI (`amifldrv64.sys`) и загрузчик последней протестированной версии утилиты в один клик.
 <p align="center">
-  <img src="docs/screenshots/07_settings.png" alt="Settings & Tools" width="850" />
+  <img src="docs/screenshots/ui/08_settings.png" alt="Settings & Tools" width="850" />
 </p>
 
 ---
