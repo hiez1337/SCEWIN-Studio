@@ -159,5 +159,19 @@
   "Dialog_DownloadSuccess": "SCEWIN downloaded and prepared successfully!",
   "Dialog_DownloadError": "Failed to download SCEWIN: {0}",
   "Dialog_ExportSuccess": "NVRAM dump exported and loaded into SCEWIN Studio!",
-  "Dialog_ExportError": "Failed to export NVRAM: {0}"
+  "Dialog_ExportError": "Failed to export NVRAM: {0}",
+
+  "Badge_Admin": "Admin",
+  "Badge_NonAdmin": "Non-Admin",
+  "ToolTip_AdminBadge": "NVRAM Access Rights (Click to restart as Administrator)",
+
+  "Mem_ExplainerTitle": "AMD AM4 / MSI Click BIOS Memory Timings Architecture",
+  "Mem_ExplainerBody": "On AMD AM4 motherboards (e.g. MSI B550), timing control is divided into 3 independent tiers:\n• Tier 1 (AMD CBS, AmdSetup): Hardware AGESA registers in hex format (10h Clk = 16, 12h = 18, 26h = 38). When MSI overlay is 0 (Auto), the CPU applies these directly.\n• Tier 2 (MSI Click BIOS OC Engine, Setup): OEM manual overlay (0 = Auto). Non-zero values override CBS registers during early POST via MSI's PEI driver.\n• Tier 3 (AMD Overclocking PBS): Auxiliary duplicate menu (Auto by default).",
+  "Mem_Tier1Title": "Primary Control: AMD CBS (AmdSetup)",
+  "Mem_Tier1Desc": "Hardware AGESA hexadecimal registers (10h Clk = 16, 12h = 18, 26h = 38). Applied directly by CPU when MSI overlay is set to 0.",
+  "Mem_Tier1Badge": "Primary / AMD CBS",
+  "Mem_MsiOverlayHeader": "⚙️ MSI Click BIOS Overlay (numeric input, 0 = Auto)",
+  "Mem_MsiOverlayBadge": "OEM Overlay",
+  "Mem_PbsHeader": "📦 AMD Overclocking Service Duplicates (Auto by default)",
+  "Mem_PbsBadge": "AMD PBS"
 }

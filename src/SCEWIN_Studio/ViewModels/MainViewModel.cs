@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -255,6 +256,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             OnPropertyChanged(nameof(StatusHeader));
         };
 
+        PendingDiffs.CollectionChanged += (s, e) =>
+        {
+            OnPropertyChanged(nameof(ModifiedCount));
+            OnPropertyChanged(nameof(HasModifiedItems));
+        };
+
         InitializeAsync();
     }
 
@@ -264,30 +271,37 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private async void InitializeAsync()
     {
-        // Load saved settings
-        if (!string.IsNullOrEmpty(_settingsService.Settings.Language))
+        try
         {
-            L10n.CurrentLanguage = _settingsService.Settings.Language;
-        }
-
-        if (!string.IsNullOrEmpty(_settingsService.Settings.ScewinExePath))
-        {
-            var res = _detector.ValidatePath(_settingsService.Settings.ScewinExePath);
-            if (res.Found)
+            // Load saved settings
+            if (!string.IsNullOrEmpty(_settingsService.Settings.Language))
             {
-                ApplyDetectionResult(res);
+                L10n.CurrentLanguage = _settingsService.Settings.Language;
             }
-        }
 
-        if (!IsScewinReady && _settingsService.Settings.AutoScanOnStartup)
+            if (!string.IsNullOrEmpty(_settingsService.Settings.ScewinExePath))
+            {
+                var res = _detector.ValidatePath(_settingsService.Settings.ScewinExePath);
+                if (res.Found)
+                {
+                    ApplyDetectionResult(res);
+                }
+            }
+
+            if (!IsScewinReady && _settingsService.Settings.AutoScanOnStartup)
+            {
+                await RunAutoDetectAsync(silent: true);
+            }
+
+            UpdateMotherboardSummary();
+
+            // Try auto-loading default or sample dump if available
+            TryLoadDefaultDump();
+        }
+        catch (Exception ex)
         {
-            await RunAutoDetectAsync(silent: true);
+            App.LogCrash("MainViewModel.InitializeAsync", ex);
         }
-
-        UpdateMotherboardSummary();
-
-        // Try auto-loading default or sample dump if available
-        TryLoadDefaultDump();
     }
 
     private void TryLoadDefaultDump()
@@ -717,13 +731,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    [RelayCommand]
-    public async Task ApplyChangesAsync()
+    private async Task<(bool success, string backupPath)> ExecuteApplyCoreAsync()
     {
         if (CurrentDump == null || PendingDiffs.Count == 0)
         {
             MessageBox.Show(L10n["Diff_Empty"], "Info", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
+            return (false, string.Empty);
         }
 
         if (!IsAdmin)
@@ -738,20 +751,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 RestartAsAdmin();
             }
-            return;
+            return (false, string.Empty);
         }
 
         if (!IsScewinReady || string.IsNullOrEmpty(ScewinPath))
         {
             MessageBox.Show(L10n["Settings_ScewinPathDesc"], "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
+            return (false, string.Empty);
         }
 
         var diffSummary = string.Join("\n", PendingDiffs.Select(d => $"• {d.Question}: {d.OldValue} → {d.NewValue}"));
         var confirmMsg = L10n.Get("Dialog_ApplyConfirmText", diffSummary);
 
         var confirm = MessageBox.Show(confirmMsg, L10n["Dialog_ApplyConfirmTitle"], MessageBoxButton.YesNo, MessageBoxImage.Warning);
-        if (confirm != MessageBoxResult.Yes) return;
+        if (confirm != MessageBoxResult.Yes) return (false, string.Empty);
 
         IsLoading = true;
         LoadingMessage = "Применение изменений в NVRAM...";
@@ -768,33 +781,32 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             var backupPath = Path.Combine(dumpDir, $"nvram_backup_{DateTime.Now:yyyyMMdd_HHmmss}.txt");
             var backupScript = _parser.GenerateFullScript(CurrentDump);
-            File.WriteAllText(backupPath, backupScript);
+            File.WriteAllText(backupPath, backupScript, new UTF8Encoding(false));
 
             // 2. Generate diff script
             var modifiedTokens = PendingDiffs.Select(d => d.TokenRef);
             var diffScript = _parser.GenerateDiffScript(CurrentDump, modifiedTokens);
             var diffPath = Path.Combine(Path.GetTempPath(), $"nvram_diff_{Guid.NewGuid():N}.txt");
-            File.WriteAllText(diffPath, diffScript);
+            File.WriteAllText(diffPath, diffScript, new UTF8Encoding(false));
 
             // 3. Execute SCEWIN /i
             var runRes = await _runner.ImportNvramAsync(ScewinPath, diffPath);
             if (runRes.success)
             {
-                MessageBox.Show(
-                    $"{L10n["Dialog_ApplySuccess"]}\n\n{L10n.Get("Dialog_BackupSuccess", backupPath)}",
-                    "SCEWIN Success",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-
                 // Commit original values to current
                 foreach (var diff in PendingDiffs.ToList())
                 {
-                    diff.TokenRef.OriginalOption = diff.TokenRef.CurrentOption;
-                    diff.TokenRef.OriginalNumericValue = diff.TokenRef.CurrentDisplayValue;
+                    if (diff.TokenRef.HasOptions)
+                    {
+                        diff.TokenRef.OriginalOption = diff.TokenRef.CurrentOption;
+                    }
+                    else
+                    {
+                        diff.TokenRef.OriginalNumericValue = diff.TokenRef.CustomNumericValue;
+                    }
                 }
                 PendingDiffs.Clear();
-                OnPropertyChanged(nameof(ModifiedCount));
-                OnPropertyChanged(nameof(HasModifiedItems));
+                return (true, backupPath);
             }
             else
             {
@@ -803,11 +815,56 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     "SCEWIN Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
+                return (false, string.Empty);
             }
         }
         finally
         {
             IsLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task ApplyChangesAsync()
+    {
+        var (success, backupPath) = await ExecuteApplyCoreAsync();
+        if (success)
+        {
+            MessageBox.Show(
+                $"{L10n["Dialog_ApplySuccess"]}\n\n{L10n.Get("Dialog_BackupSuccess", backupPath)}",
+                "SCEWIN Success",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+    }
+
+    [RelayCommand]
+    public async Task ApplyAndRebootAsync()
+    {
+        var (success, backupPath) = await ExecuteApplyCoreAsync();
+        if (success)
+        {
+            var prompt = $"{L10n["Dialog_ApplySuccess"]}\n\n{L10n.Get("Dialog_BackupSuccess", backupPath)}\n\nХотите перезагрузить компьютер прямо сейчас, чтобы применить изменения в BIOS?";
+            var res = MessageBox.Show(prompt, "Перезагрузка ПК", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (res == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    var psi = new ProcessStartInfo
+                    {
+                        FileName = "shutdown",
+                        Arguments = "/r /t 5 /c \"SCEWIN Studio: Перезагрузка для применения настроек UEFI NVRAM\"",
+                        CreateNoWindow = true,
+                        UseShellExecute = false
+                    };
+                    Process.Start(psi);
+                    Application.Current?.Shutdown();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Не удалось выполнить команду перезагрузки: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
         }
     }
 
@@ -858,42 +915,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             MessageBox.Show($"Error creating backup: {ex.Message}", "Backup Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    [RelayCommand]
-    public async Task ApplyAndRebootAsync()
-    {
-        if (CurrentDump == null || PendingDiffs.Count == 0)
-        {
-            MessageBox.Show(L10n["Diff_Empty"], "Info", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
-        await ApplyChangesAsync();
-
-        var res = MessageBox.Show(
-            "Изменения NVRAM успешно применены в BIOS!\n\nПерезагрузить компьютер сейчас для активации новых параметров?",
-            "Применение и Перезагрузка",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
-
-        if (res == MessageBoxResult.Yes)
-        {
-            try
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = "shutdown",
-                    Arguments = "/r /t 5",
-                    CreateNoWindow = true,
-                    UseShellExecute = false
-                });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Не удалось инициировать перезагрузку: {ex.Message}", "Reboot", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
         }
     }
 

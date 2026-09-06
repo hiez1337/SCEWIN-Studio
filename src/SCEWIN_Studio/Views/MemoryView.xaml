@@ -158,20 +158,16 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="💡" FontSize="20" Margin="0,0,14,0" VerticalAlignment="Top" />
                     <StackPanel Grid.Column="1">
-                        <TextBlock Text="Архитектура деревьев таймингов AMD AM4 / MSI Click BIOS"
+                        <TextBlock Text="{Binding L10n[Mem_ExplainerTitle], FallbackValue='Архитектура деревьев таймингов AMD AM4 / MSI Click BIOS'}"
                                    FontWeight="SemiBold"
                                    FontSize="14"
                                    Foreground="#60CDFF" />
-                        <TextBlock FontSize="12"
+                        <TextBlock Text="{Binding L10n[Mem_ExplainerBody]}"
+                                   FontSize="12"
                                    TextWrapping="Wrap"
                                    LineHeight="18"
                                    Margin="0,6,0,0"
-                                   Foreground="#CCCCCC">
-                            На материнских платах AMD AM4 (MSI B550) управление таймингами разделено на 3 независимых уровня:<LineBreak />
-                            • <Bold Foreground="#4ADE80">Tier 1 (AMD CBS, AmdSetup):</Bold> Аппаратные регистры AGESA в hex-формате (10h Clk = 16, 12h = 18, 26h = 38). При значении 0 (Auto) в оверлее MSI именно они применяются процессором напрямую.<LineBreak />
-                            • <Bold Foreground="#60CDFF">Tier 2 (MSI Click BIOS OC Engine, Setup):</Bold> OEM-оверлей ручного ввода (0 = Auto). При ненулевом значении PEI-драйвер MSI переопределяет регистры CBS на этапе POST.<LineBreak />
-                            • <Bold Foreground="#B0B0B0">Tier 3 (AMD Overclocking PBS):</Bold> Служебное дублирующее меню настроек (по умолчанию Auto).
-                        </TextBlock>
+                                   Foreground="#CCCCCC" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -195,11 +191,11 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="Основной контроль: AMD CBS (AmdSetup)"
+                        <TextBlock Text="{Binding L10n[Mem_Tier1Title], FallbackValue='Основной контроль: AMD CBS (AmdSetup)'}"
                                    FontWeight="SemiBold"
                                    FontSize="16"
                                    Foreground="#FFFFFF" />
-                        <TextBlock Text="Аппаратные шестнадцатеричные регистры AGESA (10h Clk = 16, 12h = 18, 26h = 38). Применяются процессором напрямую при значении 0 в оверлее MSI."
+                        <TextBlock Text="{Binding L10n[Mem_Tier1Desc], FallbackValue='Аппаратные шестнадцатеричные регистры AGESA (10h Clk = 16, 12h = 18, 26h = 38). Применяются процессором напрямую при значении 0 в оверлее MSI.'}"
                                    FontSize="12"
                                    Margin="0,2,0,0"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
@@ -211,7 +207,7 @@
                             BorderBrush="#256B3D"
                             BorderThickness="1"
                             VerticalAlignment="Center">
-                        <TextBlock Text="Основной / AMD CBS" FontSize="11" FontWeight="SemiBold" Foreground="#4ADE80" />
+                        <TextBlock Text="{Binding L10n[Mem_Tier1Badge], FallbackValue='Основной / AMD CBS'}" FontSize="11" FontWeight="SemiBold" Foreground="#4ADE80" />
                     </Border>
                 </Grid>
 
@@ -240,7 +236,7 @@
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
-                <Expander Header="⚙️ Оверлей MSI Click BIOS (числовой ввод, 0 = Auto)"
+                <Expander Header="{Binding L10n[Mem_MsiOverlayHeader], FallbackValue='⚙️ Оверлей MSI Click BIOS (числовой ввод, 0 = Auto)'}"
                           IsExpanded="False"
                           Padding="16,12"
                           Background="Transparent"
@@ -259,7 +255,7 @@
                                         BorderBrush="#254B69"
                                         BorderThickness="1"
                                         VerticalAlignment="Center">
-                                    <TextBlock Text="OEM Оверлей" FontSize="10" FontWeight="SemiBold" Foreground="#60CDFF" />
+                                    <TextBlock Text="{Binding DataContext.L10n[Mem_MsiOverlayBadge], RelativeSource={RelativeSource AncestorType=UserControl}, FallbackValue='OEM Оверлей'}" FontSize="10" FontWeight="SemiBold" Foreground="#60CDFF" />
                                 </Border>
                             </StackPanel>
                         </DataTemplate>
@@ -297,7 +293,7 @@
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
-                <Expander Header="📦 Служебные дубликаты AMD Overclocking (по умолчанию Auto)"
+                <Expander Header="{Binding L10n[Mem_PbsHeader], FallbackValue='📦 Служебные дубликаты AMD Overclocking (по умолчанию Auto)'}"
                           IsExpanded="False"
                           Padding="16,12"
                           Background="Transparent"
@@ -316,7 +312,7 @@
                                         BorderBrush="#444444"
                                         BorderThickness="1"
                                         VerticalAlignment="Center">
-                                    <TextBlock Text="AMD PBS" FontSize="10" FontWeight="SemiBold" Foreground="#888888" />
+                                    <TextBlock Text="{Binding DataContext.L10n[Mem_PbsBadge], RelativeSource={RelativeSource AncestorType=UserControl}, FallbackValue='AMD PBS'}" FontSize="10" FontWeight="SemiBold" Foreground="#888888" />
                                 </Border>
                             </StackPanel>
                         </DataTemplate>

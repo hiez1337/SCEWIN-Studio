@@ -159,5 +159,19 @@
   "Dialog_DownloadSuccess": "SCEWIN успешно загружен и подготовлен к работе!",
   "Dialog_DownloadError": "Не удалось загрузить SCEWIN: {0}",
   "Dialog_ExportSuccess": "NVRAM успешно считан и загружен в SCEWIN Studio!",
-  "Dialog_ExportError": "Не удалось считать NVRAM: {0}"
+  "Dialog_ExportError": "Не удалось считать NVRAM: {0}",
+
+  "Badge_Admin": "Администратор",
+  "Badge_NonAdmin": "Пользователь",
+  "ToolTip_AdminBadge": "Права доступа к NVRAM (Нажмите для перезапуска от имени Администратора)",
+
+  "Mem_ExplainerTitle": "Архитектура деревьев таймингов AMD AM4 / MSI Click BIOS",
+  "Mem_ExplainerBody": "На материнских платах AMD AM4 (MSI B550) управление таймингами разделено на 3 независимых уровня:\n• Tier 1 (AMD CBS, AmdSetup): Аппаратные регистры AGESA в hex-формате (10h Clk = 16, 12h = 18, 26h = 38). При значении 0 (Auto) в оверлее MSI именно они применяются процессором напрямую.\n• Tier 2 (MSI Click BIOS OC Engine, Setup): OEM-оверлей ручного ввода (0 = Auto). При ненулевом значении PEI-драйвер MSI переопределяет регистры CBS на этапе POST.\n• Tier 3 (AMD Overclocking PBS): Служебное дублирующее меню настроек (по умолчанию Auto).",
+  "Mem_Tier1Title": "Основной контроль: AMD CBS (AmdSetup)",
+  "Mem_Tier1Desc": "Аппаратные шестнадцатеричные регистры AGESA (10h Clk = 16, 12h = 18, 26h = 38). Применяются процессором напрямую при значении 0 в оверлее MSI.",
+  "Mem_Tier1Badge": "Основной / AMD CBS",
+  "Mem_MsiOverlayHeader": "⚙️ Оверлей MSI Click BIOS (числовой ввод, 0 = Auto)",
+  "Mem_MsiOverlayBadge": "OEM Оверлей",
+  "Mem_PbsHeader": "📦 Служебные дубликаты AMD Overclocking (по умолчанию Auto)",
+  "Mem_PbsBadge": "AMD PBS"
 }

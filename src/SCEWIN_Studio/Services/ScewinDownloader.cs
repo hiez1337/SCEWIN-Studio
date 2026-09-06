@@ -182,7 +182,18 @@ public class ScewinDownloader : IScewinDownloader
                 ct.ThrowIfCancellationRequested();
                 if (string.IsNullOrEmpty(entry.Name)) continue;
 
-                var dest = Path.Combine(targetDirectory, entry.Name);
+                var targetDirFull = Path.GetFullPath(targetDirectory);
+                if (!targetDirFull.EndsWith(Path.DirectorySeparatorChar.ToString()))
+                {
+                    targetDirFull += Path.DirectorySeparatorChar;
+                }
+
+                var dest = Path.GetFullPath(Path.Combine(targetDirectory, entry.Name));
+                if (!dest.StartsWith(targetDirFull, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException($"Security: zip entry '{entry.Name}' attempts path traversal outside target directory.");
+                }
+
                 entry.ExtractToFile(dest, overwrite: true);
                 idx++;
                 int p = 20 + (idx * 60 / Math.Max(1, total));

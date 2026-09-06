@@ -163,7 +163,11 @@ public partial class ScewinToken : ObservableObject
         }
         set
         {
-            if (!IsBinaryToggle) return;
+            if (!IsBinaryToggle)
+            {
+                OnPropertyChanged(nameof(IsChecked));
+                return;
+            }
             var target = Options.FirstOrDefault(o =>
             {
                 var txt = o.DisplayText.ToLowerInvariant();
@@ -174,6 +178,10 @@ public partial class ScewinToken : ObservableObject
             if (target != null)
             {
                 CurrentOption = target;
+            }
+            else
+            {
+                OnPropertyChanged(nameof(IsChecked));
             }
         }
     }
@@ -299,7 +307,10 @@ public partial class ScewinToken : ObservableObject
         }
     }
 
-    public bool IsNumericStepper => !HasOptions && int.TryParse(CurrentDisplayValue?.Replace("<", "").Replace(">", "").Trim(), out _);
+    public bool IsNumericStepper => !HasOptions &&
+        (int.TryParse(CurrentDisplayValue?.Replace("<", "").Replace(">", "").Trim(), out _) ||
+         (CurrentDisplayValue != null && CurrentDisplayValue.Trim().EndsWith("h", StringComparison.OrdinalIgnoreCase) &&
+          int.TryParse(CurrentDisplayValue.Trim().TrimEnd('h', 'H'), System.Globalization.NumberStyles.HexNumber, null, out _)));
 
     [CommunityToolkit.Mvvm.Input.RelayCommand]
     public void IncrementNumeric()
@@ -309,6 +320,11 @@ public partial class ScewinToken : ObservableObject
         {
             CustomNumericValue = (val + 1).ToString();
         }
+        else if (cur.EndsWith("h", StringComparison.OrdinalIgnoreCase) &&
+                 int.TryParse(cur.Substring(0, cur.Length - 1), System.Globalization.NumberStyles.HexNumber, null, out int hexVal))
+        {
+            CustomNumericValue = $"{hexVal + 1:X}h";
+        }
     }
 
     [CommunityToolkit.Mvvm.Input.RelayCommand]
@@ -317,14 +333,12 @@ public partial class ScewinToken : ObservableObject
         var cur = CurrentDisplayValue?.Replace("<", "").Replace(">", "").Trim() ?? "0";
         if (int.TryParse(cur, out int val))
         {
-            if (val > 0)
-            {
-                CustomNumericValue = (val - 1).ToString();
-            }
-            else
-            {
-                CustomNumericValue = "0";
-            }
+            CustomNumericValue = val > 0 ? (val - 1).ToString() : "0";
+        }
+        else if (cur.EndsWith("h", StringComparison.OrdinalIgnoreCase) &&
+                 int.TryParse(cur.Substring(0, cur.Length - 1), System.Globalization.NumberStyles.HexNumber, null, out int hexVal))
+        {
+            CustomNumericValue = hexVal > 0 ? $"{hexVal - 1:X}h" : "0h";
         }
     }
 

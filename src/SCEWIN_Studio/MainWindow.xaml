@@ -132,7 +132,8 @@
                             VerticalAlignment="Center"
                             Margin="0,0,14,0">
                     <!-- Export NVRAM Button -->
-                    <Button Style="{StaticResource HeaderActionButtonStyle}"
+                    <Button AutomationProperties.AutomationId="Btn_ExportNvram"
+                            Style="{StaticResource HeaderActionButtonStyle}"
                             Command="{Binding ExportFromBiosCommand}"
                             Height="30"
                             Padding="8,0"
@@ -144,7 +145,8 @@
                     </Button>
 
                     <!-- Import Diff Button -->
-                    <Button Style="{StaticResource HeaderActionButtonStyle}"
+                    <Button AutomationProperties.AutomationId="Btn_ImportDiff"
+                            Style="{StaticResource HeaderActionButtonStyle}"
                             Command="{Binding ImportDiffCommand}"
                             Height="30"
                             Padding="8,0"
@@ -156,7 +158,8 @@
                     </Button>
 
                     <!-- Create Backup Button -->
-                    <Button Style="{StaticResource HeaderActionButtonStyle}"
+                    <Button AutomationProperties.AutomationId="Btn_CreateBackup"
+                            Style="{StaticResource HeaderActionButtonStyle}"
                             Command="{Binding CreateBackupCommand}"
                             Height="30"
                             Padding="8,0"
@@ -168,7 +171,8 @@
                     </Button>
 
                     <!-- Language Switcher Button -->
-                    <Button Command="{Binding ToggleLanguageCommand}"
+                    <Button AutomationProperties.AutomationId="Btn_ToggleLanguage"
+                            Command="{Binding ToggleLanguageCommand}"
                             Style="{StaticResource HeaderActionButtonStyle}"
                             ToolTip="Switch Language (RU / EN)"
                             Height="30"
@@ -178,20 +182,23 @@
                     </Button>
 
                     <!-- Admin Status Badge -->
-                    <Button Command="{Binding RestartAsAdminCommand}"
-                            ToolTip="Права доступа к NVRAM (Нажмите для перезапуска от имени Администратора)"
+                    <Button AutomationProperties.AutomationId="Btn_AdminBadge"
+                            Command="{Binding RestartAsAdminCommand}"
+                            ToolTip="{Binding L10n[ToolTip_AdminBadge], FallbackValue='Права доступа к NVRAM (Нажмите для перезапуска от имени Администратора)'}"
                             Style="{StaticResource HeaderActionButtonStyle}"
                             Height="30"
                             Padding="6,0"
                             VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="🛡️ " FontSize="10" />
-                            <TextBlock Text="Admin" FontSize="10" FontWeight="SemiBold" Foreground="#00C853">
+                            <TextBlock FontSize="10" FontWeight="SemiBold">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="{Binding L10n[Badge_Admin], FallbackValue='Admin'}" />
+                                        <Setter Property="Foreground" Value="#00C853" />
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsAdmin}" Value="False">
-                                                <Setter Property="Text" Value="Non-Admin" />
+                                                <Setter Property="Text" Value="{Binding L10n[Badge_NonAdmin], FallbackValue='Non-Admin'}" />
                                                 <Setter Property="Foreground" Value="#FFA000" />
                                             </DataTrigger>
                                         </Style.Triggers>

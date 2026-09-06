@@ -166,7 +166,8 @@
             <!-- Bottom Actions -->
             <StackPanel Grid.Row="3" Margin="0,16,0,0">
                 <!-- Apply to NVRAM Button (Accent Sky Blue) -->
-                <Button Content="{Binding L10n[Btn_ApplyDiff], FallbackValue='Apply to NVRAM (SCEWIN /i)'}"
+                <Button AutomationProperties.AutomationId="Btn_ApplyChanges"
+                        Content="{Binding L10n[Btn_ApplyDiff], FallbackValue='Apply to NVRAM (SCEWIN /i)'}"
                         Style="{StaticResource FluentAccentButtonStyle}"
                         HorizontalAlignment="Stretch"
                         Height="38"
@@ -174,7 +175,8 @@
                         IsEnabled="{Binding HasModifiedItems}" />
 
                 <!-- Apply & Reboot Button -->
-                <Button Content="{Binding L10n[Btn_ApplyAndReboot], FallbackValue='Apply &amp; Reboot'}"
+                <Button AutomationProperties.AutomationId="Btn_ApplyAndReboot"
+                        Content="{Binding L10n[Btn_ApplyAndReboot], FallbackValue='Apply &amp; Reboot'}"
                         Style="{StaticResource FluentSecondaryButtonStyle}"
                         HorizontalAlignment="Stretch"
                         Height="34"

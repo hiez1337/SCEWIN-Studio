@@ -260,8 +260,10 @@ public class MemoryTierTests
         var memXaml = File.ReadAllText(memViewPath);
 
         // Verify expanders with exact required headers
-        Assert.Contains("Header=\"⚙️ Оверлей MSI Click BIOS (числовой ввод, 0 = Auto)\"", memXaml);
-        Assert.Contains("Header=\"📦 Служебные дубликаты AMD Overclocking (по умолчанию Auto)\"", memXaml);
+        Assert.True(memXaml.Contains("Header=\"⚙️ Оверлей MSI Click BIOS (числовой ввод, 0 = Auto)\"") ||
+                    memXaml.Contains("FallbackValue='⚙️ Оверлей MSI Click BIOS (числовой ввод, 0 = Auto)'"));
+        Assert.True(memXaml.Contains("Header=\"📦 Служебные дубликаты AMD Overclocking (по умолчанию Auto)\"") ||
+                    memXaml.Contains("FallbackValue='📦 Служебные дубликаты AMD Overclocking (по умолчанию Auto)'"));
         Assert.Contains("IsExpanded=\"False\"", memXaml);
 
         // Verify badges in TokenCard.xaml
