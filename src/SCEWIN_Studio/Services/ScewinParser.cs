@@ -197,6 +197,66 @@ public class ScewinParser : IScewinParser
 
     private void ParseAndAddOption(ScewinToken token, string lineContent, string rawLine)
     {
+        // High-speed fast path for standard option lines: *[00]Disabled or [01]Enabled
+        int commentIdx = lineContent.IndexOf("//", StringComparison.Ordinal);
+        string content = commentIdx >= 0 ? lineContent.Substring(0, commentIdx) : lineContent;
+
+        int openBracket = content.IndexOf('[');
+        int closeBracket = openBracket >= 0 ? content.IndexOf(']', openBracket + 1) : -1;
+        if (openBracket >= 0 && closeBracket > openBracket)
+        {
+            var prefix = content.Substring(0, openBracket);
+            int starCount = 0;
+            bool validPrefix = true;
+            for (int i = 0; i < prefix.Length; i++)
+            {
+                char c = prefix[i];
+                if (c == '*') starCount++;
+                else if (c != ' ' && c != '\t')
+                {
+                    validPrefix = false;
+                    break;
+                }
+            }
+
+            if (validPrefix && starCount <= 1)
+            {
+                string hexVal = content.Substring(openBracket + 1, closeBracket - openBracket - 1).Trim();
+                string text = content.Substring(closeBracket + 1).Trim();
+
+                bool isValidHex = hexVal.Length > 0;
+                for (int i = 0; i < hexVal.Length; i++)
+                {
+                    char c = hexVal[i];
+                    if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')))
+                    {
+                        isValidHex = false;
+                        break;
+                    }
+                }
+
+                if (isValidHex)
+                {
+                    bool isSelected = starCount == 1;
+                    var opt = new ScewinOption
+                    {
+                        ValueHex = hexVal,
+                        DisplayText = string.IsNullOrEmpty(text) ? hexVal : text,
+                        IsSelected = isSelected,
+                        RawLine = rawLine
+                    };
+
+                    token.Options.Add(opt);
+                    if (isSelected)
+                    {
+                        token.OriginalOption = opt;
+                        token.CurrentOption = opt;
+                    }
+                    return;
+                }
+            }
+        }
+
         var match = OptionRegex.Match(lineContent);
         if (match.Success)
         {

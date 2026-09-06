@@ -131,6 +131,9 @@ public partial class ScewinToken : ObservableObject
         IsDetailsExpanded = !IsDetailsExpanded;
     }
 
+    private string? _searchableLower;
+    public string SearchableLower => _searchableLower ??= $"{DisplayTitle} {Question} {HelpString}".ToLowerInvariant();
+
     private string? _displayTitle;
     public string DisplayTitle
     {
@@ -138,11 +141,13 @@ public partial class ScewinToken : ObservableObject
         {
             if (_displayTitle == null)
             {
-                var q = System.Text.RegularExpressions.Regex.Replace(Question.Trim(), @"\s+", " ");
+                var q = Question.Trim();
                 if (q.Equals("PM L1 SS", StringComparison.OrdinalIgnoreCase))
                     _displayTitle = "Active State Power Management (ASPM)";
                 else if (q.Equals("PCIe/GFX Lanes Configuration", StringComparison.OrdinalIgnoreCase))
                     _displayTitle = "PCIe Slot Bifurcation";
+                else if (q.IndexOf("  ", StringComparison.Ordinal) >= 0)
+                    _displayTitle = System.Text.RegularExpressions.Regex.Replace(q, @"\s+", " ");
                 else
                     _displayTitle = q;
             }
@@ -218,89 +223,141 @@ public partial class ScewinToken : ObservableObject
         }
     }
 
+    private string? _timingSubtitle;
+    private bool _timingSubtitleComputed;
     public string? TimingSubtitle
     {
         get
         {
-            if (HasHexClockOptions)
+            if (!_timingSubtitleComputed)
             {
-                return "Hex Clk: 10h = 16, 12h = 18, 26h = 38 (значения в тактах)";
+                _timingSubtitle = ComputeTimingSubtitle();
+                _timingSubtitleComputed = true;
             }
-            if (IsTier2Msi)
-            {
-                return "0 = режим Auto (активны регистры CBS). Ввод числа переопределяет CBS.";
-            }
-            if (IsTier3Pbs)
-            {
-                return "Служебный дубликат (Auto = наследование параметров)";
-            }
-            return null;
+            return _timingSubtitle;
         }
+    }
+
+    private string? ComputeTimingSubtitle()
+    {
+        if (HasHexClockOptions)
+        {
+            return "Hex Clk: 10h = 16, 12h = 18, 26h = 38 (значения в тактах)";
+        }
+        if (IsTier2Msi)
+        {
+            return "0 = режим Auto (активны регистры CBS). Ввод числа переопределяет CBS.";
+        }
+        if (IsTier3Pbs)
+        {
+            return "Служебный дубликат (Auto = наследование параметров)";
+        }
+        return null;
     }
 
     public bool HasTimingSubtitle => !string.IsNullOrEmpty(TimingSubtitle);
 
-    public bool HasInfoTooltip => !string.IsNullOrWhiteSpace(InfoTooltipText);
-
+    private string? _infoTooltipText;
+    private bool _infoTooltipComputed;
     public string? InfoTooltipText
     {
         get
         {
-            if (MemoryTier == MemoryTier.Tier1Cbs)
+            if (!_infoTooltipComputed)
             {
-                return "AMD CBS (AmdSetup): Аппаратные регистры AGESA в шестнадцатеричном формате (10h Clk = 16 тактов, 12h Clk = 18, 26h Clk = 38). Если в оверлее MSI BIOS установлено 0 (Auto), процессор использует именно эти значения напрямую.";
+                _infoTooltipText = ComputeInfoTooltipText();
+                _infoTooltipComputed = true;
             }
-            if (MemoryTier == MemoryTier.Tier2Msi)
-            {
-                return "MSI Click BIOS OC Engine: OEM-оверлей Setup VarStore (0 = Auto). При значении 0 действуют аппаратные регистры AMD CBS. Если ввести число вручную (например, 16), PEI-драйвер MSI переопределит регистры CBS при старте POST.";
-            }
-            if (MemoryTier == MemoryTier.Tier3Pbs)
-            {
-                return "AMD Overclocking PBS: Служебный дубликат меню AMD. По умолчанию находится в [FF]Auto и синхронизируется с первичными настройками.";
-            }
+            return _infoTooltipText;
+        }
+    }
 
-            var q = (Question + " " + HelpString).ToLowerInvariant();
-            if (q.Contains("bifurcation") || q.Contains("lanes configuration"))
-                return "Конфигурация распределения линий PCIe между слотами материнской платы (x16, x8/x8 и т.д.).";
-            return null;
+    public bool HasInfoTooltip => !string.IsNullOrWhiteSpace(InfoTooltipText);
+
+    private string? ComputeInfoTooltipText()
+    {
+        if (MemoryTier == MemoryTier.Tier1Cbs)
+        {
+            return "AMD CBS (AmdSetup): Аппаратные регистры AGESA в шестнадцатеричном формате (10h Clk = 16 тактов, 12h Clk = 18, 26h Clk = 38). Если в оверлее MSI BIOS установлено 0 (Auto), процессор использует именно эти значения напрямую.";
+        }
+        if (MemoryTier == MemoryTier.Tier2Msi)
+        {
+            return "MSI Click BIOS OC Engine: OEM-оверлей Setup VarStore (0 = Auto). При значении 0 действуют аппаратные регистры AMD CBS. Если ввести число вручную (например, 16), PEI-драйвер MSI переопределит регистры CBS при старте POST.";
+        }
+        if (MemoryTier == MemoryTier.Tier3Pbs)
+        {
+            return "AMD Overclocking PBS: Служебный дубликат меню AMD. По умолчанию находится в [FF]Auto и синхронизируется с первичными настройками.";
+        }
+
+        var q = SearchableLower;
+        if (q.Contains("bifurcation") || q.Contains("lanes configuration"))
+            return "Конфигурация распределения линий PCIe между слотами материнской платы (x16, x8/x8 и т.д.).";
+        return null;
+    }
+
+    private string? _infoBannerText;
+    private bool _infoBannerComputed;
+    public string? InfoBannerText
+    {
+        get
+        {
+            if (!_infoBannerComputed)
+            {
+                _infoBannerText = ComputeInfoBannerText();
+                _infoBannerComputed = true;
+            }
+            return _infoBannerText;
         }
     }
 
     public bool HasInfoBanner => !string.IsNullOrWhiteSpace(InfoBannerText);
 
-    public string? InfoBannerText
+    private string? ComputeInfoBannerText()
     {
-        get
-        {
-            var q = (Question + " " + HelpString).ToLowerInvariant();
-            if (q.Contains("bifurcation") || q.Contains("lanes configuration"))
-                return "Конфигурация распределения линий PCIe между слотами материнской платы (x16, x8/x8 и т.д.).";
-            return null;
-        }
+        var q = SearchableLower;
+        if (q.Contains("bifurcation") || q.Contains("lanes configuration"))
+            return "Конфигурация распределения линий PCIe между слотами материнской платы (x16, x8/x8 и т.д.).";
+        return null;
     }
 
+    private bool? _isZeroAuto;
     public bool IsZeroAuto
     {
         get
         {
-            if (!IsTier2Msi) return false;
-            var val = (CustomNumericValue ?? OriginalNumericValue ?? string.Empty).Replace("<", "").Replace(">", "").Trim();
-            return val == "0" || string.IsNullOrEmpty(val);
+            if (!_isZeroAuto.HasValue)
+            {
+                if (!IsTier2Msi)
+                {
+                    _isZeroAuto = false;
+                }
+                else
+                {
+                    var val = (CustomNumericValue ?? OriginalNumericValue ?? string.Empty).Replace("<", "").Replace(">", "").Trim();
+                    _isZeroAuto = val == "0" || string.IsNullOrEmpty(val);
+                }
+            }
+            return _isZeroAuto.Value;
         }
     }
 
+    private bool? _isOptimal;
     public bool IsOptimal
     {
         get
         {
-            var q = (Question + " " + HelpString).ToLowerInvariant();
-            var val = CurrentDisplayValue.ToLowerInvariant();
-            if (q.Contains("aspm") && (val.Contains("disable") || val.Contains("off") || val.Contains("l0 permanent"))) return true;
-            if (q.Contains("bar") && (val.Contains("enable") || val.Contains("on"))) return true;
-            if (q.Contains("c-state") && (val.Contains("disable") || val.Contains("off"))) return true;
-            if (q.Contains("bifurcation") && (val.Contains("auto") || val.Contains("x16"))) return true;
-            if (q.Contains("curve") && val.Contains("negative")) return true;
-            return false;
+            if (!_isOptimal.HasValue)
+            {
+                var q = SearchableLower;
+                var val = CurrentDisplayValue.ToLowerInvariant();
+                if (q.Contains("aspm") && (val.Contains("disable") || val.Contains("off") || val.Contains("l0 permanent"))) _isOptimal = true;
+                else if (q.Contains("bar") && (val.Contains("enable") || val.Contains("on"))) _isOptimal = true;
+                else if (q.Contains("c-state") && (val.Contains("disable") || val.Contains("off"))) _isOptimal = true;
+                else if (q.Contains("bifurcation") && (val.Contains("auto") || val.Contains("x16"))) _isOptimal = true;
+                else if (q.Contains("curve") && val.Contains("negative")) _isOptimal = true;
+                else _isOptimal = false;
+            }
+            return _isOptimal.Value;
         }
     }
 
@@ -319,7 +376,7 @@ public partial class ScewinToken : ObservableObject
 
     private string ComputeIconGlyph()
     {
-        var q = (Question + " " + HelpString).ToLowerInvariant();
+        var q = SearchableLower;
         if (SubCategory == "CpuPowerStates" || q.Contains("c-state") || q.Contains("sleep") || q.Contains("power saving") || q.Contains("deep sleep"))
             return "\uEC46"; // Crescent Moon / Sleep
         if (SubCategory == "PboCurve" || SubCategory == "PboLimits" || q.Contains("curve") || q.Contains("pbo") || q.Contains("overclock") || q.Contains("voltage") || q.Contains("frequency") || q.Contains("ratio"))
@@ -345,10 +402,46 @@ public partial class ScewinToken : ObservableObject
         return "\uE71D"; // General setting / slider
     }
 
-    public bool IsNumericStepper => !HasOptions &&
-        (int.TryParse(CurrentDisplayValue?.Replace("<", "").Replace(">", "").Trim(), out _) ||
-         (CurrentDisplayValue != null && CurrentDisplayValue.Trim().EndsWith("h", StringComparison.OrdinalIgnoreCase) &&
-          int.TryParse(CurrentDisplayValue.Trim().TrimEnd('h', 'H'), System.Globalization.NumberStyles.HexNumber, null, out _)));
+    private bool? _isNumericStepper;
+    public bool IsNumericStepper
+    {
+        get
+        {
+            if (!_isNumericStepper.HasValue)
+            {
+                if (HasOptions)
+                {
+                    _isNumericStepper = false;
+                }
+                else
+                {
+                    var val = CurrentDisplayValue;
+                    if (val == null)
+                    {
+                        _isNumericStepper = false;
+                    }
+                    else
+                    {
+                        var trimmed = val.Replace("<", "").Replace(">", "").Trim();
+                        if (int.TryParse(trimmed, out _))
+                        {
+                            _isNumericStepper = true;
+                        }
+                        else if (trimmed.EndsWith("h", StringComparison.OrdinalIgnoreCase) &&
+                                 int.TryParse(trimmed.Substring(0, trimmed.Length - 1), System.Globalization.NumberStyles.HexNumber, null, out _))
+                        {
+                            _isNumericStepper = true;
+                        }
+                        else
+                        {
+                            _isNumericStepper = false;
+                        }
+                    }
+                }
+            }
+            return _isNumericStepper.Value;
+        }
+    }
 
     [CommunityToolkit.Mvvm.Input.RelayCommand]
     public void IncrementNumeric()
@@ -382,6 +475,7 @@ public partial class ScewinToken : ObservableObject
 
     partial void OnCurrentOptionChanged(ScewinOption? value)
     {
+        _isOptimal = null;
         OnPropertyChanged(nameof(IsModified));
         OnPropertyChanged(nameof(CurrentDisplayValue));
         OnPropertyChanged(nameof(IsChecked));
@@ -391,6 +485,9 @@ public partial class ScewinToken : ObservableObject
 
     partial void OnCustomNumericValueChanged(string? value)
     {
+        _isOptimal = null;
+        _isZeroAuto = null;
+        _isNumericStepper = null;
         OnPropertyChanged(nameof(IsModified));
         OnPropertyChanged(nameof(CurrentDisplayValue));
         OnPropertyChanged(nameof(IsOptimal));
@@ -401,6 +498,10 @@ public partial class ScewinToken : ObservableObject
     partial void OnMemoryTierChanged(MemoryTier value)
     {
         _iconGlyph = null;
+        _infoTooltipComputed = false;
+        _infoBannerComputed = false;
+        _timingSubtitleComputed = false;
+        _isZeroAuto = null;
         OnPropertyChanged(nameof(IsTier1Cbs));
         OnPropertyChanged(nameof(IsTier2Msi));
         OnPropertyChanged(nameof(IsTier3Pbs));

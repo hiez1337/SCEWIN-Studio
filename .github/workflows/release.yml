@@ -71,15 +71,17 @@ jobs:
       - name: Determine Release Tag
         id: release_tag
         shell: pwsh
+        env:
+          INPUT_TAG: ${{ inputs.tag_name }}
         run: |
           if ($env:GITHUB_REF -like "refs/tags/*") {
             $tag = $env:GITHUB_REF.Substring(10)
-          } elseif ('${{ inputs.tag_name }}' -ne '') {
-            $tag = '${{ inputs.tag_name }}'
+          } elseif ($env:INPUT_TAG) {
+            $tag = $env:INPUT_TAG
           } else {
             $tag = "v1.0.0"
           }
-          echo "tag=$tag" >> $env:GITHUB_OUTPUT
+          "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

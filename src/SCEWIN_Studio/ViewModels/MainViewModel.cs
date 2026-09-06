@@ -305,7 +305,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             UpdateMotherboardSummary();
 
             // Try auto-loading default or sample dump if available
-            TryLoadDefaultDump();
+            await TryLoadDefaultDumpAsync();
         }
         catch (Exception ex)
         {
@@ -313,7 +313,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    private void TryLoadDefaultDump()
+    private async Task TryLoadDefaultDumpAsync()
     {
         try
         {
@@ -323,7 +323,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 .ToList();
             if (dumpFiles.Count > 0)
             {
-                LoadDumpFromFile(dumpFiles[0]);
+                await LoadDumpFromFileAsync(dumpFiles[0]);
             }
         }
         catch { }
@@ -448,6 +448,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public void SetCurrentDump(ScewinDump dump)
     {
+        if (CurrentDump != null)
+        {
+            foreach (var oldToken in CurrentDump.Tokens)
+            {
+                oldToken.PropertyChanged -= OnTokenPropertyChanged;
+            }
+        }
+
         CurrentDump = dump;
         OnPropertyChanged(nameof(StatusHeader));
 
@@ -801,7 +809,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 var result = await _runner.ExportNvramAsync(ScewinPath, saveDialog.FileName);
                 if (result.success && File.Exists(saveDialog.FileName))
                 {
-                    LoadDumpFromFile(saveDialog.FileName);
+                    await LoadDumpFromFileAsync(saveDialog.FileName);
                     MessageBox.Show(L10n["Dialog_ExportSuccess"], "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
@@ -887,7 +895,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     }
                     else
                     {
-                        diff.TokenRef.OriginalNumericValue = diff.TokenRef.CustomNumericValue;
+                        diff.TokenRef.OriginalNumericValue = diff.TokenRef.CustomNumericValue ?? string.Empty;
                     }
                 }
                 PendingDiffs.Clear();
@@ -1385,7 +1393,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public void TriggerRawFilterDebounced(int? overrideDelayMs = null)
     {
         _searchCts?.Cancel();
-        _searchCts?.Dispose();
 
         var cts = new CancellationTokenSource();
         _searchCts = cts;
@@ -1563,7 +1570,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private CancellationTokenSource? _comparisonSearchCts;
 
     [RelayCommand]
-    public void LoadComparisonDumpA()
+    public async Task LoadComparisonDumpA()
     {
         var ofd = new OpenFileDialog
         {
@@ -1575,10 +1582,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             try
             {
-                var content = File.ReadAllText(ofd.FileName);
-                var dump = _parser.Parse(content, ofd.FileName);
+                var filePath = ofd.FileName;
+                var dump = await Task.Run(() =>
+                {
+                    var content = File.ReadAllText(filePath);
+                    return _parser.Parse(content, filePath);
+                });
                 ComparisonDumpA = dump;
-                ComparisonDumpAPath = ofd.FileName;
+                ComparisonDumpAPath = filePath;
                 UpdateComparisonDumpAInfo();
             }
             catch (Exception ex)
@@ -1603,7 +1614,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    public void LoadComparisonDumpB()
+    public async Task LoadComparisonDumpB()
     {
         var ofd = new OpenFileDialog
         {
@@ -1615,10 +1626,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             try
             {
-                var content = File.ReadAllText(ofd.FileName);
-                var dump = _parser.Parse(content, ofd.FileName);
+                var filePath = ofd.FileName;
+                var dump = await Task.Run(() =>
+                {
+                    var content = File.ReadAllText(filePath);
+                    return _parser.Parse(content, filePath);
+                });
                 ComparisonDumpB = dump;
-                ComparisonDumpBPath = ofd.FileName;
+                ComparisonDumpBPath = filePath;
                 UpdateComparisonDumpBInfo();
             }
             catch (Exception ex)
@@ -1659,7 +1674,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public void TriggerComparisonFilterDebounced(int delayMs = 120)
     {
         _comparisonSearchCts?.Cancel();
-        _comparisonSearchCts?.Dispose();
 
         var cts = new CancellationTokenSource();
         _comparisonSearchCts = cts;

@@ -74,9 +74,22 @@
                 </StackPanel>
 
                 <!-- Side-by-Side Diff Items List -->
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <ScrollViewer.Style>
-                        <Style TargetType="ScrollViewer">
+                <ListView ItemsSource="{Binding PendingDiffs}"
+                          Background="Transparent"
+                          BorderThickness="0"
+                          Padding="0"
+                          HorizontalContentAlignment="Stretch"
+                          ScrollViewer.CanContentScroll="True"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.VirtualizationMode="Recycling"
+                          VirtualizingPanel.ScrollUnit="Pixel"
+                          VirtualizingPanel.CacheLengthUnit="Item"
+                          VirtualizingPanel.CacheLength="3,3"
+                          VirtualizingPanel.IsContainerVirtualizable="True">
+                    <ListView.Style>
+                        <Style TargetType="ListView">
                             <Setter Property="Visibility" Value="Collapsed" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding HasModifiedItems}" Value="True">
@@ -84,83 +97,97 @@
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
-                    </ScrollViewer.Style>
-                    <ItemsControl ItemsSource="{Binding PendingDiffs}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Margin="0,0,0,8"
-                                        Padding="10,8"
-                                        CornerRadius="6"
-                                        Background="#262626"
-                                        BorderBrush="#383838"
-                                        BorderThickness="1">
-                                    <StackPanel>
-                                        <!-- Question Title & Token -->
-                                        <DockPanel Margin="0,0,0,6">
-                                            <TextBlock Text="{Binding TokenId, StringFormat='0x{0}'}"
-                                                       DockPanel.Dock="Right"
-                                                       FontSize="10"
-                                                       Foreground="#757575"
-                                                       VerticalAlignment="Center" />
-                                            <TextBlock Text="{Binding Question}"
-                                                       FontWeight="SemiBold"
-                                                       FontSize="12"
-                                                       Foreground="#FFFFFF"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       VerticalAlignment="Center" />
-                                        </DockPanel>
+                    </ListView.Style>
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0,0,0,8" />
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListViewItem">
+                                        <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="10,8"
+                                    CornerRadius="6"
+                                    Background="#262626"
+                                    BorderBrush="#383838"
+                                    BorderThickness="1">
+                                <StackPanel>
+                                    <!-- Question Title & Token -->
+                                    <DockPanel Margin="0,0,0,6">
+                                        <TextBlock Text="{Binding TokenId, StringFormat='0x{0}'}"
+                                                   DockPanel.Dock="Right"
+                                                   FontSize="10"
+                                                   Foreground="#757575"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Question}"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="12"
+                                                   Foreground="#FFFFFF"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center" />
+                                    </DockPanel>
 
-                                        <!-- Side-by-side values -->
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="20" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
+                                    <!-- Side-by-side values -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="20" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
 
-                                            <!-- Old Value (Current NVRAM, Red Tint) -->
-                                            <Border Grid.Column="0"
-                                                    Background="{StaticResource DiffRedBgBrush}"
-                                                    BorderBrush="{StaticResource DiffRedBorderBrush}"
-                                                    BorderThickness="1"
-                                                    CornerRadius="4"
-                                                    Padding="6,4">
-                                                <TextBlock Text="{Binding OldValue}"
-                                                           FontSize="11"
-                                                           Foreground="{StaticResource DiffRedTextBrush}"
-                                                           TextTrimming="CharacterEllipsis"
-                                                           HorizontalAlignment="Center" />
-                                            </Border>
-
-                                            <!-- Arrow -->
-                                            <TextBlock Grid.Column="1"
-                                                       Text="→"
+                                        <!-- Old Value (Current NVRAM, Red Tint) -->
+                                        <Border Grid.Column="0"
+                                                Background="{StaticResource DiffRedBgBrush}"
+                                                BorderBrush="{StaticResource DiffRedBorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="4"
+                                                Padding="6,4">
+                                            <TextBlock Text="{Binding OldValue}"
                                                        FontSize="11"
-                                                       Foreground="#6E6E6E"
-                                                       HorizontalAlignment="Center"
-                                                       VerticalAlignment="Center" />
+                                                       Foreground="{StaticResource DiffRedTextBrush}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       HorizontalAlignment="Center" />
+                                        </Border>
 
-                                            <!-- New Value (Proposed Values, Green Tint) -->
-                                            <Border Grid.Column="2"
-                                                    Background="{StaticResource DiffGreenBgBrush}"
-                                                    BorderBrush="{StaticResource DiffGreenBorderBrush}"
-                                                    BorderThickness="1"
-                                                    CornerRadius="4"
-                                                    Padding="6,4">
-                                                <TextBlock Text="{Binding NewValue}"
-                                                           FontSize="11"
-                                                           FontWeight="Bold"
-                                                           Foreground="{StaticResource DiffGreenTextBrush}"
-                                                           TextTrimming="CharacterEllipsis"
-                                                           HorizontalAlignment="Center" />
-                                            </Border>
-                                        </Grid>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                                        <!-- Arrow -->
+                                        <TextBlock Grid.Column="1"
+                                                   Text="→"
+                                                   FontSize="11"
+                                                   Foreground="#6E6E6E"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" />
+
+                                        <!-- New Value (Proposed Values, Green Tint) -->
+                                        <Border Grid.Column="2"
+                                                Background="{StaticResource DiffGreenBgBrush}"
+                                                BorderBrush="{StaticResource DiffGreenBorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="4"
+                                                Padding="6,4">
+                                            <TextBlock Text="{Binding NewValue}"
+                                                       FontSize="11"
+                                                       FontWeight="Bold"
+                                                       Foreground="{StaticResource DiffGreenTextBrush}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       HorizontalAlignment="Center" />
+                                        </Border>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
             </Grid>
 
             <!-- Bottom Actions -->

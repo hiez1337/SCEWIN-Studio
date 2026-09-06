@@ -25,6 +25,14 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\SCEWIN.zip" />
+    <EmbeddedResource Include="Resources\Strings.ru.json">
+      <LogicalName>SCEWIN_Studio.Resources.Strings.ru.json</LogicalName>
+      <WithCulture>false</WithCulture>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Strings.en.json">
+      <LogicalName>SCEWIN_Studio.Resources.Strings.en.json</LogicalName>
+      <WithCulture>false</WithCulture>
+    </EmbeddedResource>
     <Content Include="Resources\SCEWIN.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

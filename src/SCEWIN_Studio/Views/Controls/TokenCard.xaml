@@ -11,8 +11,8 @@
             Margin="0,0,0,10">
         <Border.Style>
             <Style TargetType="Border">
-                <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="Background" Value="{StaticResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{StaticResource CardStrokeColorDefaultBrush}" />
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding IsModified}" Value="True">
                         <Setter Property="BorderBrush" Value="#60CDFF" />
@@ -47,7 +47,7 @@
                                FontSize="14"
                                MaxWidth="380"
                                TextTrimming="CharacterEllipsis"
-                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                               Foreground="{StaticResource TextFillColorPrimaryBrush}"
                                VerticalAlignment="Center" />
 
                     <!-- Optimal Badge -->
@@ -250,16 +250,16 @@
                         <!-- Bottom technical metadata badges -->
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <Border Background="#242424" BorderBrush="#353535" BorderThickness="1" Padding="6,2" CornerRadius="4" Margin="0,0,6,0">
-                                <TextBlock Text="{Binding TokenId, StringFormat='Token: 0x{0}'}" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                <TextBlock Text="{Binding TokenId, StringFormat='Token: 0x{0}'}" FontSize="11" Foreground="{StaticResource TextFillColorTertiaryBrush}" />
                             </Border>
                             <Border Background="#242424" BorderBrush="#353535" BorderThickness="1" Padding="6,2" CornerRadius="4" Margin="0,0,6,0">
-                                <TextBlock Text="{Binding Offset, StringFormat='Offset: 0x{0}'}" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                <TextBlock Text="{Binding Offset, StringFormat='Offset: 0x{0}'}" FontSize="11" Foreground="{StaticResource TextFillColorTertiaryBrush}" />
                             </Border>
                             <Border Background="#242424" BorderBrush="#353535" BorderThickness="1" Padding="6,2" CornerRadius="4" Margin="0,0,6,0">
-                                <TextBlock Text="{Binding Width, StringFormat='Width: {0}'}" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                <TextBlock Text="{Binding Width, StringFormat='Width: {0}'}" FontSize="11" Foreground="{StaticResource TextFillColorTertiaryBrush}" />
                             </Border>
                             <Border Background="#242424" BorderBrush="#353535" BorderThickness="1" Padding="6,2" CornerRadius="4">
-                                <TextBlock Text="{Binding SafetyLevel}" FontSize="11" FontWeight="Medium" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                <TextBlock Text="{Binding SafetyLevel}" FontSize="11" FontWeight="Medium" Foreground="{StaticResource TextFillColorTertiaryBrush}" />
                             </Border>
                         </StackPanel>
                     </StackPanel>
