@@ -13,6 +13,7 @@ bld/
 [Ll]og/
 [Ll]ogs/
 publish/
+release-assets/
 SCEWIN_Studio_Release/
 *.zip
 
@@ -32,9 +33,11 @@ tests/*.png
 
 ## Backup and local NVRAM dumps
 Backups/
-nvram_dump_*.txt
-nvram_backup_*.txt
-nvram_diff_*.txt
+/nvram_dump_*.txt
+/nvram_backup_*.txt
+/nvram_diff_*.txt
+!tests/SCEWIN_Studio.Tests/TestData/**
 test-results.json
 ui-test-screenshots/
 ui-tests.ps1
+

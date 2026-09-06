@@ -100,7 +100,7 @@ public class StartupAndProcessTests
     public void MainViewModel_SetLanguage_PersistsAndUpdatesL10n()
     {
         var settingsService = new SettingsService();
-        var l10n = LocalizationService.Instance;
+        var l10n = new LocalizationService();
         var vm = new MainViewModel(
             new ScewinParser(),
             new ScewinDetector(),

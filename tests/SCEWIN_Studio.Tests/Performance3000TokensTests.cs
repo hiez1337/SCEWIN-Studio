@@ -129,7 +129,7 @@ public class Performance3000TokensTests
     [Fact]
     public void LocalizationService_CanLoadEmbeddedStrings()
     {
-        var service = LocalizationService.Instance;
+        var service = new LocalizationService();
 
         service.CurrentLanguage = "en";
         var enDashboard = service["Nav_Dashboard"];

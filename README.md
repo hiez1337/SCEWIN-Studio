@@ -1,132 +1,178 @@
 # SCEWIN Studio
 
-<p align="center">
-  <a href="https://github.com/hiez1337/SCEWIN-Studio/releases"><img src="https://img.shields.io/github/v/release/hiez1337/SCEWIN-Studio?color=60CDFF&label=Release&logo=github" alt="GitHub Release"></a>
-  <a href="https://github.com/hiez1337/SCEWIN-Studio/actions"><img src="https://img.shields.io/github/actions/workflow/status/hiez1337/SCEWIN-Studio/release.yml?branch=main&label=Build%20%26%20Release&logo=githubactions" alt="Build Status"></a>
-  <img src="https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet" alt=".NET 8.0">
-  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011%20x64-0078D6?logo=windows" alt="Platform Windows">
-  <img src="https://img.shields.io/badge/Architecture-WPF%20%2F%20Fluent%20Design-00C853" alt="UI Architecture">
-</p>
+SCEWIN Studio is a graphical configuration interface and diagnostic utility for inspecting, modifying, and comparing AMI Aptio V UEFI NVRAM setup variables on x86-64 platforms. The utility interfaces with the American Megatrends Setup Configuration Engine (AMISCE / SCEWIN) driver stack, providing direct access to firmware setup tokens without requiring interactive UEFI Setup menu navigation.
 
-**SCEWIN Studio** — современный графический конфигуратор (GUI) на базе **.NET 8** и **Fluent Design (Windows 11 UI)** для низкоуровневого управления, редактирования и сравнительного анализа переменных **UEFI NVRAM** с помощью официальной системной утилиты **AMI SCEWIN (AMISCE)**.
-
-Приложение спроектировано для безопасного и удобного твикинга систем на базе процессоров **AMD Ryzen (AM4 / AM5)** и платформ Intel, поддерживая работу с полными дампами BIOS, содержащими **3,000–4,000+ параметров**.
+Designed primarily for low-level tuning on AMD AM4/AM5 platforms and modern Intel motherboards, the application is optimized for firmware tables exceeding 3,000 to 4,000 NVRAM setup tokens, ensuring smooth navigation, virtualized rendering, and safe configuration deployment.
 
 ---
 
-## 📸 Скриншоты интерфейса / UI Showcase
+## Overview
 
-### 1. 🖥️ Панель управления (Dashboard)
-Статус подключения к AMI Aptio V, определение материнской платы, версия BIOS, контрольная сумма HII CRC32, быстрые карточки популярных твиков и боковая панель ожидающих изменений (Diff).
-<p align="center">
-  <img src="docs/screenshots/ui/01_dashboard.png" alt="Dashboard" width="850" />
-</p>
+Modern UEFI implementations expose thousands of configurable setup parameters through HII (Human Interface Infrastructure) data structures stored in SPI flash NVRAM. Many performance-critical parameters—such as sub-timings, Precision Boost Overdrive scalar limits, Curve Optimizer offsets, PCIe ASPM link states, and bus clock dividers—are often hidden from standard vendor BIOS setup menus or scattered across vendor-specific sub-menus.
 
-### 2. ⚡ Память и Тайминги (Multi-Tier Architecture)
-Трёхуровневая классификация параметров с разделением на **AMD CBS** (аппаратный уровень AGESA), **MSI Click BIOS OC Engine** (оверлей OEM) и служебные дубликаты **AMD PBS**, с чип-фильтрами по группам таймингов.
-<p align="center">
-  <img src="docs/screenshots/ui/02_memory_tuning.png" alt="Memory & Timings" width="850" />
-</p>
-
-### 3. 🚀 Разгон и Precision Boost Overdrive (PBO)
-Тонкая настройка PBO, Curve Optimizer для каждого ядра с переключателями Positive/Negative и шагами Magnitude, скаляр PBO и лимиты мощности.
-<p align="center">
-  <img src="docs/screenshots/ui/03_overclocking.png" alt="Overclocking & PBO" width="850" />
-</p>
-
-### 4. 🔌 PCIe, ASPM и Бифуркация линий
-Управление состояниями энергосбережения шины PCI Express (L0s, L1, L1 Substates), ReBAR (Resizable BAR), Re-Size BAR Support и конфигурацией разделения слотов PCIe.
-<p align="center">
-  <img src="docs/screenshots/ui/04_pcie_power.png" alt="PCIe Power & ASPM" width="850" />
-</p>
-
-### 5. ⚡ Процессор и C-States
-Управление глобальными состояниями сна ядер (Global C-state Control, DF C-States, CPPC, S3/Modern Standby Support, Core Performance Boost).
-<p align="center">
-  <img src="docs/screenshots/ui/05_cpu_power.png" alt="CPU Power & C-States" width="850" />
-</p>
-
-### 6. 📋 Каталог всех токенов (Raw Tokens)
-Виртуализированный каталог на 4,000+ параметров NVRAM с мгновенным debounced-поиском, фильтрацией по категориям и чип-фильтрами.
-<p align="center">
-  <img src="docs/screenshots/ui/06_raw_tokens.png" alt="Raw Tokens Catalog" width="850" />
-</p>
-
-### 7. 🔍 Двустороннее сравнение дампов BIOS (Dual-Dump Compare)
-Новый мощный интерфейс сопоставления двух независимых дампов (Профиль А vs Профиль Б) с автоматическим подсчётом статистики различий, цветовыми бейджами статусов, фильтрацией и экспортом отчётов.
-<p align="center">
-  <img src="docs/screenshots/ui/07_dual_dump_comparison.png" alt="Dual Dump Comparison" width="850" />
-</p>
-
-### 8. ⚙️ Настройки и автоматический загрузчик SCEWIN
-Встроенный поиск локальных утилит SCEWIN, проверка драйверов ядра AMI (`amifldrv64.sys`) и загрузчик последней протестированной версии утилиты в один клик.
-<p align="center">
-  <img src="docs/screenshots/ui/08_settings.png" alt="Settings & Tools" width="850" />
-</p>
+SCEWIN Studio parses raw SCEWIN NVRAM dumps, categorizes all discovered tokens into functional domains, and provides a structured interface for reading, modifying, and staging firmware adjustments. Modified values can either be written directly to active NVRAM via the AMI kernel driver or exported as minimal delta scripts for scriptable flashing.
 
 ---
 
-## 🌟 Ключевые возможности
+## System Requirements
 
-- 🚀 **Оптимизация под 3,000–4,000+ параметров**:
-  - Полная виртуализация всех списков (`VirtualizingPanel.VirtualizationMode="Recycling"` с `CacheLengthUnit="Item"`).
-  - Асинхронный парсинг дампа в пуле потоков без зависания UI.
-  - Кэширование тяжёлых строковых свойств в `ScewinToken` и фоновый debounced-поиск.
-  - Нулевые просадки FPS при прокрутке и мгновенное переключение вкладок.
-- 🛡️ **Безопасное применение изменений**:
-  - Автоматическое создание бэкапа перед записью (`nvram_backup_<timestamp>.txt`).
-  - Просмотр предпросмотра изменений в реальном времени (Diff Viewer) в правой боковой панели.
-  - Корректная генерация diff-скрипта с оригинальным `HIICrc32`.
-- 🌐 **Полная локализация (Русский / English)**:
-  - 100% покрытие строк интерфейса с возможностью переключения на лету кнопкой в шапке.
-- 📦 **Встроенные драйверы AMI**:
-  - Автоматическая распаковка официальных утилит и драйверов ядра `amifldrv64.sys` / `amigendrv64.sys`.
+- Operating System: Windows 10 (build 19041 or newer) or Windows 11, 64-bit.
+- Firmware Architecture: AMI Aptio V UEFI.
+- Administrative Privileges: Administrator rights are required to load the AMI kernel driver (`amifldrv64.sys` or `amigendrv64.sys`) for live NVRAM access.
+- Runtime Prerequisites:
+  - Standalone package (`SCEWIN_Studio.exe` or `SCEWIN_Studio_win-x64_SelfContained.zip`): None.
+  - Framework-dependent package (`SCEWIN_Studio_win-x64_FrameworkDependent.zip`): Microsoft .NET 8 Desktop Runtime (x64).
 
 ---
 
-## 📦 Скачать готовый релиз (GitHub Releases)
+## Architecture and Capabilities
 
-Свежие готовые сборки собираются автоматически в **[GitHub Releases](https://github.com/hiez1337/SCEWIN-Studio/releases)**:
+### Token Categorization Engine
 
-| Файл | Описание | Кому подходит |
-|---|---|---|
-| **`SCEWIN_Studio.exe`** | Одиночный переносимый файл (Single-File, всё включено) | **Рекомендуется** всем пользователям (не требует установки .NET) |
-| **`SCEWIN_Studio_win-x64_SelfContained.zip`** | Полный переносимый архив с зависимостями | Для распаковки в отдельную папку |
-| **`SCEWIN_Studio_win-x64_FrameworkDependent.zip`** | Компактная версия (~5 МБ) | Если уже установлен [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) |
+Raw NVRAM dumps present setup variables as unorganized linear lists of HII question blocks. SCEWIN Studio implements a multi-stage classification pipeline that evaluates question strings, help descriptions, and token offsets:
+
+- Memory Subsystem: Primary, secondary, and turnaround timings, drive strengths, bus termination (ProcODT, RttPark/Nom/Wr), and clock dividers.
+- Overclocking and PBO: Precision Boost Overdrive operational modes, scalar multipliers, PPT/TDC/EDC power thresholds, and per-core Curve Optimizer magnitudes.
+- PCIe and Power Management: Active State Power Management (ASPM L0s/L1/L1 substates), Resizable BAR (ReBAR), Above 4G Decoding, and PCIe slot bifurcation modes.
+- CPU Power and C-States: Global C-State controls, DF C-States, Core Performance Boost (CPB), and Collaborative Processor Performance Control (CPPC).
+- Raw Catalog: Unfiltered access to every discovered token with debounced full-text searching across names, hex offsets, and help strings.
+
+### Multi-Tier Memory Disambiguation
+
+AMD UEFI implementations often contain duplicate tokens representing identical hardware parameters across different firmware layers:
+
+- AMD CBS (AmdSetup): Hardware-level AGESA parameters executed directly by the processor memory initialization routines.
+- MSI OC Engine / OEM Overlays: Vendor-specific setup menus that translate user values into AGESA parameters, frequently using `0 = Auto` semantics instead of raw timing values.
+- AMD PBS: Platform-level peripheral and board-specific duplicate tokens.
+
+SCEWIN Studio identifies these tiers automatically, distinguishing authoritative AGESA controls from vendor overlays to prevent conflicting adjustments.
+
+### Dual Dump Comparison Engine
+
+The comparison engine performs deterministic side-by-side differential analysis between two distinct NVRAM dumps:
+
+- Token Alignment: Matches variables across firmware revisions using normalized question identifiers and token offsets.
+- Differential Filtering: Segregates parameters into Modified, Identical, Exclusive to Dump A, and Exclusive to Dump B.
+- Delta Export: Generates minimal diff scripts containing solely the modified tokens with verified HII CRC32 headers, minimizing write cycles and eliminating collateral register modifications.
+
+### Safety Model
+
+Firmware configuration errors can lead to non-bootable hardware states requiring CMOS clearing. SCEWIN Studio implements multiple defensive layers:
+
+- Pre-Write Backup: Automatically captures a full timestamped NVRAM dump before applying any modifications to the system.
+- Staging and Review: All modifications are buffered in a persistent review drawer; changes must be explicitly inspected prior to commit.
+- CRC32 Validation: Ensures exported delta scripts match the target firmware's HII checksum.
+- Process Hygiene: Cleans up orphaned driver handles and background processes to avoid locking firmware devices.
 
 ---
 
-## 🛠️ Сборка из исходников
+## UI Overview
 
-### Требования:
-- Windows 10/11 x64 (версия 19041+)
+### Dashboard
+Connection status, motherboard hardware identity, BIOS version string, HII CRC32 checksum, system quick-tweak cards, and the pending changes review panel.
+
+![Dashboard](docs/screenshots/ui/01_dashboard.png)
+
+### Memory Tuning
+Three-tier memory hierarchy displaying AMD CBS, vendor OC engine, and AMD PBS parameters with chip-based sub-category filtering.
+
+![Memory Tuning](docs/screenshots/ui/02_memory_tuning.png)
+
+### Overclocking and PBO
+Precision Boost Overdrive configuration, scalar settings, power envelope limits (PPT/TDC/EDC), and per-core Curve Optimizer signed offsets.
+
+![Overclocking](docs/screenshots/ui/03_overclocking.png)
+
+### PCIe and ASPM Configuration
+Bus power management, ASPM link states, L1 substate policies, Resizable BAR, and slot bifurcation control.
+
+![PCIe and Power](docs/screenshots/ui/04_pcie_power.png)
+
+### CPU Power Management
+Global C-state controls, DF C-states, CPPC autonomous frequency selection, and platform sleep state configurations.
+
+![CPU Power](docs/screenshots/ui/05_cpu_power.png)
+
+### Raw Tokens Catalog
+Virtualized token browser providing rapid filtering, offset inspection, and search across thousands of NVRAM parameters.
+
+![Raw Tokens Catalog](docs/screenshots/ui/06_raw_tokens.png)
+
+### Dual Dump Comparison
+Side-by-side profile comparator with category breakdowns, difference tallies, and delta export capabilities.
+
+![Dual Dump Comparison](docs/screenshots/ui/07_dual_dump_comparison.png)
+
+### Settings and Driver Diagnostics
+Detection and management of local AMI SCEWIN executables and kernel driver installation.
+
+![Settings](docs/screenshots/ui/08_settings.png)
+
+---
+
+## Installation and Usage
+
+### Obtaining Binaries
+
+Compiled packages are available under [GitHub Releases](https://github.com/hiez1337/SCEWIN-Studio/releases):
+
+- `SCEWIN_Studio.exe`: Single-file portable executable containing the application runtime and embedded AMI drivers.
+- `SCEWIN_Studio_win-x64_SelfContained.zip`: Standalone archive for environments where running from an extracted directory is preferred.
+- `SCEWIN_Studio_win-x64_FrameworkDependent.zip`: Minimal archive requiring the system to have .NET 8 Desktop Runtime installed.
+
+### Basic Workflow
+
+1. Run `SCEWIN_Studio.exe` as Administrator.
+2. Click "Read NVRAM" to dump current firmware configuration, or click "Load Dump" to open an existing NVRAM text export.
+3. Browse tokens via domain-specific navigation tabs or use the Raw Tokens catalog.
+4. Adjust parameters as needed. All changes are recorded in the Staged Changes panel on the right.
+5. Review the staged modifications.
+6. Click "Apply to NVRAM" to flash the changes directly, or click "Export Diff" to save a minimal AMISCE script for deferred or external execution.
+7. Reboot the system for firmware changes to take effect.
+
+---
+
+## Building from Source
+
+### Prerequisites
+
+- Windows 10/11 x64 (build 19041+)
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 
-### Клонирование и сборка:
+### Compilation
+
+Clone the repository and build the release configuration using the .NET CLI:
+
 ```powershell
 git clone https://github.com/hiez1337/SCEWIN-Studio.git
 cd SCEWIN-Studio
 
-# Сборка Release
+# Build the solution
 dotnet build src/SCEWIN_Studio/SCEWIN_Studio.csproj -c Release
 
-# Запуск тестов
-dotnet test SCEWIN_Studio.sln -c Release
+# Publish self-contained single-file executable
+dotnet publish src/SCEWIN_Studio/SCEWIN_Studio.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ./publish/self-contained
 ```
 
 ---
 
-## 🧪 Автоматизированные тесты
+## Verification and Testing
 
-Проект покрыт набором из **141 xUnit теста**:
-- Тестирование парсера на реальных дампах BIOS AMD AM4 (B550) и AM5 (X670/B650).
-- Нагрузочные тесты на дампы размером 3,500–4,000 токенов (парсинг < 350 мс).
-- Валидация работы `ObservableRangeCollection` и многопоточного поиска.
-- Тесты алгоритма двустороннего сопоставления (`DumpComparer`).
-- Проверка корректности ресурсов локализации и упаковки.
+The repository contains an automated test suite implemented in xUnit:
+
+```powershell
+dotnet test SCEWIN_Studio.sln -c Release
+```
+
+Test coverage includes:
+- Parser correctness across real-world AM4 (AMD B550) and AM5 (AMD X670/B650) firmware exports.
+- Performance validation under high token counts (3,500 to 4,000 tokens parsed in under 350 ms).
+- Thread-safe collection operations and debounced search filtering.
+- Two-way dump diffing logic and duplicate token handling.
+- Localization resource integrity across supported locales.
 
 ---
 
-## ⚠️ Предупреждение / Disclaimer
+## Disclaimer
 
-*SCEWIN Studio работает напрямую с переменными NVRAM вашей материнской платы через драйвер ядра AMI. Неправильное изменение некоторых параметров (например, критических напряжений или несовместимых частот памяти) может потребовать сброса BIOS (Clear CMOS). Всегда сохраняйте резервные копии.*
+SCEWIN Studio writes directly to UEFI NVRAM registers via kernel-level device drivers. Setting invalid timings, voltages, or frequency dividers may cause boot failures requiring a physical CMOS reset (Clear CMOS). Always maintain verified NVRAM backups before applying untested parameter modifications.
