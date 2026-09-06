@@ -35,3 +35,6 @@ Backups/
 nvram_dump_*.txt
 nvram_backup_*.txt
 nvram_diff_*.txt
+test-results.json
+ui-test-screenshots/
+ui-tests.ps1

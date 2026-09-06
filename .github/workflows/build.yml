@@ -1,0 +1,47 @@
+name: CI Build & Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore SCEWIN_Studio.sln
+
+      - name: Build Solution
+        run: dotnet build SCEWIN_Studio.sln -c Release --no-restore
+
+      - name: Run Unit Tests
+        run: dotnet test SCEWIN_Studio.sln -c Release --no-restore --verbosity normal
+
+      - name: Publish Artifact (Win-x64)
+        run: >
+          dotnet publish src/SCEWIN_Studio/SCEWIN_Studio.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -o ./publish/self-contained
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SCEWIN_Studio_win-x64_Portable
+          path: ./publish/self-contained/SCEWIN_Studio.exe

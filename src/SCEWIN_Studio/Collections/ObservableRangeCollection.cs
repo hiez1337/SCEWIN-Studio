@@ -73,12 +73,14 @@ public class ObservableRangeCollection<T> : ObservableCollection<T>
             Items.Clear();
             if (Items is List<T> list)
             {
-                list.Capacity = Math.Max(list.Capacity, itemsToAdd.Count);
+                list.AddRange(itemsToAdd);
             }
-
-            foreach (var item in itemsToAdd)
+            else
             {
-                Items.Add(item);
+                foreach (var item in itemsToAdd)
+                {
+                    Items.Add(item);
+                }
             }
         }
         finally
@@ -122,12 +124,14 @@ public class ObservableRangeCollection<T> : ObservableCollection<T>
         {
             if (Items is List<T> list)
             {
-                list.Capacity = Math.Max(list.Capacity, list.Count + itemsToAdd.Count);
+                list.AddRange(itemsToAdd);
             }
-
-            foreach (var item in itemsToAdd)
+            else
             {
-                Items.Add(item);
+                foreach (var item in itemsToAdd)
+                {
+                    Items.Add(item);
+                }
             }
         }
         finally

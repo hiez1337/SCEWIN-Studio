@@ -1,0 +1,111 @@
+name: Release Build & Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release Tag Name (e.g. v1.0.0)'
+        required: false
+        default: 'v1.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore SCEWIN_Studio.sln
+
+      - name: Run Unit Tests
+        run: dotnet test SCEWIN_Studio.sln -c Release --no-restore --verbosity normal
+
+      - name: Publish Self-Contained (Win-x64)
+        run: >
+          dotnet publish src/SCEWIN_Studio/SCEWIN_Studio.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -o ./publish/self-contained
+
+      - name: Publish Framework-Dependent (Win-x64)
+        run: >
+          dotnet publish src/SCEWIN_Studio/SCEWIN_Studio.csproj
+          -c Release
+          -r win-x64
+          --self-contained false
+          -o ./publish/framework-dependent
+
+      - name: Package Release Archives
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path ./release-assets
+          
+          # Compress Self-Contained release
+          Compress-Archive -Path ./publish/self-contained/* -DestinationPath ./release-assets/SCEWIN_Studio_win-x64_SelfContained.zip -Force
+          
+          # Copy standalone single-file exe for direct 1-click download
+          Copy-Item ./publish/self-contained/SCEWIN_Studio.exe ./release-assets/SCEWIN_Studio.exe -Force
+          
+          # Compress Framework-Dependent release
+          Compress-Archive -Path ./publish/framework-dependent/* -DestinationPath ./release-assets/SCEWIN_Studio_win-x64_FrameworkDependent.zip -Force
+
+      - name: Determine Release Tag
+        id: release_tag
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF -like "refs/tags/*") {
+            $tag = $env:GITHUB_REF.Substring(10)
+          } elseif ('${{ inputs.tag_name }}' -ne '') {
+            $tag = '${{ inputs.tag_name }}'
+          } else {
+            $tag = "v1.0.0"
+          }
+          echo "tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_tag.outputs.tag }}
+          name: "SCEWIN Studio ${{ steps.release_tag.outputs.tag }}"
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## SCEWIN Studio ${{ steps.release_tag.outputs.tag }}
+            
+            Modern AMI UEFI NVRAM Editor and Configurator optimized for large BIOS dumps (3,000–4,000+ tokens).
+            
+            ### 🚀 Highlights & Features:
+            - **High-Performance Virtualization**: Zero lag when scrolling, searching, and switching tabs across 3,000+ BIOS parameters.
+            - **Multi-Tier Memory Tuning**: Full visual support for AMD CBS (AmdSetup), MSI Click BIOS OC Engine (0 = Auto), and AMD PBS duplicates.
+            - **PBO & Power Management**: Curve Optimizer, PPT/TDC/EDC limits, CPU C-States, ASPM L1 substates, PCIe Bifurcation & Resizable BAR.
+            - **Dual-Dump Compare**: Side-by-side visual diff analysis between two NVRAM dump profiles with delta export.
+            - **Embedded Drivers**: Bundled official AMI SCEWIN 5.05.01 utilities for automatic driver deployment and live NVRAM import/export.
+            
+            ### 📦 Download Options:
+            - **`SCEWIN_Studio.exe`**: Ready-to-run single-file executable (portable).
+            - **`SCEWIN_Studio_win-x64_SelfContained.zip`**: Complete portable bundle (no .NET installation required).
+            - **`SCEWIN_Studio_win-x64_FrameworkDependent.zip`**: Lightweight bundle (requires .NET 8 Desktop Runtime).
+          files: |
+            ./release-assets/SCEWIN_Studio.exe
+            ./release-assets/SCEWIN_Studio_win-x64_SelfContained.zip
+            ./release-assets/SCEWIN_Studio_win-x64_FrameworkDependent.zip

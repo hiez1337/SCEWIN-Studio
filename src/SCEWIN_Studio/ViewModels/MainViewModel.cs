@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -139,16 +140,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
         RawSearchQuery = value;
     }
 
-    // Filtered collections for sections
-    public ObservableCollection<ScewinToken> AspmTokens { get; } = new();
-    public ObservableCollection<ScewinToken> OverclockingTokens { get; } = new();
-    public ObservableCollection<ScewinToken> MemoryTokens { get; } = new();
-    public ObservableCollection<ScewinToken> PrimaryCbsMemoryTokens { get; } = new();
-    public ObservableCollection<ScewinToken> MsiOverlayMemoryTokens { get; } = new();
-    public ObservableCollection<ScewinToken> PbsDuplicateMemoryTokens { get; } = new();
-    public ObservableCollection<ScewinToken> GeneralMemoryTokens { get; } = new();
-    public ObservableCollection<ScewinToken> CpuTokens { get; } = new();
-    public ObservableCollection<ScewinToken> AllTokens { get; } = new();
+    // High-performance collections for sections using ObservableRangeCollection
+    public ObservableRangeCollection<ScewinToken> AspmTokens { get; } = new();
+    public ObservableRangeCollection<ScewinToken> OverclockingTokens { get; } = new();
+    public ObservableRangeCollection<ScewinToken> MemoryTokens { get; } = new();
+    public ObservableRangeCollection<ScewinToken> PrimaryCbsMemoryTokens { get; } = new();
+    public ObservableRangeCollection<ScewinToken> MsiOverlayMemoryTokens { get; } = new();
+    public ObservableRangeCollection<ScewinToken> PbsDuplicateMemoryTokens { get; } = new();
+    public ObservableRangeCollection<ScewinToken> GeneralMemoryTokens { get; } = new();
+    public ObservableRangeCollection<ScewinToken> CpuTokens { get; } = new();
+    public ObservableRangeCollection<ScewinToken> AllTokens { get; } = new();
+    public ObservableRangeCollection<ScewinToken> QuickTweakTokens { get; } = new();
 
     public bool HasPrimaryCbsTokens => PrimaryCbsMemoryTokens.Count > 0;
     public bool HasMsiOverlayTokens => MsiOverlayMemoryTokens.Count > 0;
@@ -167,6 +169,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private string _memorySubCategory = "All";
+
+    [ObservableProperty]
+    private string _memoryTierFilter = "All"; // All, Tier1Cbs, Tier2Msi, Tier3Pbs, General
 
     public ObservableRangeCollection<ScewinToken> FilteredOverclockingTokens { get; } = new();
     public ObservableRangeCollection<ScewinToken> FilteredCpuTokens { get; } = new();
@@ -195,10 +200,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     public void SetMemorySubCategory(string subCategory) => MemorySubCategory = subCategory;
 
+    [RelayCommand]
+    public void SetMemoryTierFilter(string tier) => MemoryTierFilter = tier;
+
     partial void OnOverclockingSubCategoryChanged(string value) => UpdateOverclockingFilter();
     partial void OnCpuPowerSubCategoryChanged(string value) => UpdateCpuPowerFilter();
     partial void OnPcieSubCategoryChanged(string value) => UpdatePcieFilter();
     partial void OnMemorySubCategoryChanged(string value) => UpdateMemoryFilter();
+    partial void OnMemoryTierFilterChanged(string value) => UpdateMemoryFilter();
 
     // Raw tab filtering
     [ObservableProperty]
@@ -386,7 +395,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    public void OpenDumpFileDialog()
+    public async Task OpenDumpFileDialogAsync()
     {
         var ofd = new OpenFileDialog
         {
@@ -396,7 +405,30 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         if (ofd.ShowDialog() == true)
         {
-            LoadDumpFromFile(ofd.FileName);
+            await LoadDumpFromFileAsync(ofd.FileName);
+        }
+    }
+
+    public async Task LoadDumpFromFileAsync(string filePath)
+    {
+        try
+        {
+            IsLoading = true;
+            LoadingMessage = "Загрузка и анализ дампа BIOS NVRAM...";
+            var dump = await Task.Run(() =>
+            {
+                var content = File.ReadAllText(filePath);
+                return _parser.Parse(content, filePath);
+            });
+            SetCurrentDump(dump);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error loading dump: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
 
@@ -419,17 +451,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         CurrentDump = dump;
         OnPropertyChanged(nameof(StatusHeader));
 
-        AllTokens.Clear();
-        AspmTokens.Clear();
-        OverclockingTokens.Clear();
-        MemoryTokens.Clear();
-        PrimaryCbsMemoryTokens.Clear();
-        MsiOverlayMemoryTokens.Clear();
-        PbsDuplicateMemoryTokens.Clear();
-        GeneralMemoryTokens.Clear();
-        CpuTokens.Clear();
-        PendingDiffs.Clear();
-
         if (ComparisonDumpA == null)
         {
             ComparisonDumpA = dump;
@@ -437,47 +458,52 @@ public partial class MainViewModel : ObservableObject, IDisposable
             UpdateComparisonDumpAInfo();
         }
 
+        var allList = new List<ScewinToken>(dump.Tokens.Count);
+        var aspmList = new List<ScewinToken>();
+        var ovcList = new List<ScewinToken>();
+        var memList = new List<ScewinToken>();
+        var cbsList = new List<ScewinToken>();
+        var msiList = new List<ScewinToken>();
+        var pbsList = new List<ScewinToken>();
+        var genList = new List<ScewinToken>();
+        var cpuList = new List<ScewinToken>();
+
         foreach (var token in dump.Tokens)
         {
-            token.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(ScewinToken.IsModified))
-                {
-                    OnTokenModified(token);
-                }
-            };
+            token.PropertyChanged -= OnTokenPropertyChanged;
+            token.PropertyChanged += OnTokenPropertyChanged;
 
-            AllTokens.Add(token);
+            allList.Add(token);
 
             switch (token.Category)
             {
                 case "ASPM":
-                    AspmTokens.Add(token);
+                    aspmList.Add(token);
                     break;
                 case "Overclocking":
-                    OverclockingTokens.Add(token);
+                    ovcList.Add(token);
                     break;
                 case "Memory":
-                    MemoryTokens.Add(token);
+                    memList.Add(token);
                     if (token.MemoryTier == MemoryTier.Tier1Cbs)
                     {
-                        PrimaryCbsMemoryTokens.Add(token);
+                        cbsList.Add(token);
                     }
                     else if (token.MemoryTier == MemoryTier.Tier2Msi)
                     {
-                        MsiOverlayMemoryTokens.Add(token);
+                        msiList.Add(token);
                     }
                     else if (token.MemoryTier == MemoryTier.Tier3Pbs)
                     {
-                        PbsDuplicateMemoryTokens.Add(token);
+                        pbsList.Add(token);
                     }
                     else
                     {
-                        GeneralMemoryTokens.Add(token);
+                        genList.Add(token);
                     }
                     break;
                 case "CpuPower":
-                    CpuTokens.Add(token);
+                    cpuList.Add(token);
                     break;
             }
         }
@@ -495,21 +521,21 @@ public partial class MainViewModel : ObservableObject, IDisposable
         };
         foreach (var (id, name) in cbsTimingMap)
         {
-            var t = PrimaryCbsMemoryTokens.FirstOrDefault(x =>
+            var t = cbsList.FirstOrDefault(x =>
                 string.Equals(x.TokenId, id, StringComparison.OrdinalIgnoreCase) &&
                 (x.Question.Equals(name, StringComparison.OrdinalIgnoreCase) || x.Question.StartsWith(name, StringComparison.OrdinalIgnoreCase)));
             if (t == null)
             {
-                t = PrimaryCbsMemoryTokens.FirstOrDefault(x => string.Equals(x.TokenId, id, StringComparison.OrdinalIgnoreCase));
+                t = cbsList.FirstOrDefault(x => string.Equals(x.TokenId, id, StringComparison.OrdinalIgnoreCase));
             }
             if (t != null && !priorityCbs.Contains(t)) priorityCbs.Add(t);
         }
         if (priorityCbs.Count > 0)
         {
-            var remainingCbs = PrimaryCbsMemoryTokens.Where(x => !priorityCbs.Contains(x)).ToList();
-            PrimaryCbsMemoryTokens.Clear();
-            foreach (var p in priorityCbs) PrimaryCbsMemoryTokens.Add(p);
-            foreach (var r in remainingCbs) PrimaryCbsMemoryTokens.Add(r);
+            var remainingCbs = cbsList.Where(x => !priorityCbs.Contains(x)).ToList();
+            cbsList.Clear();
+            cbsList.AddRange(priorityCbs);
+            cbsList.AddRange(remainingCbs);
         }
 
         // Curate MsiOverlayMemoryTokens so primary 5 MSI timings appear at top:
@@ -525,21 +551,21 @@ public partial class MainViewModel : ObservableObject, IDisposable
         };
         foreach (var (id, name) in msiTimingMap)
         {
-            var t = MsiOverlayMemoryTokens.FirstOrDefault(x =>
+            var t = msiList.FirstOrDefault(x =>
                 string.Equals(x.TokenId, id, StringComparison.OrdinalIgnoreCase) &&
                 x.Question.TrimStart().StartsWith(name, StringComparison.OrdinalIgnoreCase));
             if (t == null)
             {
-                t = MsiOverlayMemoryTokens.FirstOrDefault(x => string.Equals(x.TokenId, id, StringComparison.OrdinalIgnoreCase));
+                t = msiList.FirstOrDefault(x => string.Equals(x.TokenId, id, StringComparison.OrdinalIgnoreCase));
             }
             if (t != null && !priorityMsi.Contains(t)) priorityMsi.Add(t);
         }
         if (priorityMsi.Count > 0)
         {
-            var remainingMsi = MsiOverlayMemoryTokens.Where(x => !priorityMsi.Contains(x)).ToList();
-            MsiOverlayMemoryTokens.Clear();
-            foreach (var p in priorityMsi) MsiOverlayMemoryTokens.Add(p);
-            foreach (var r in remainingMsi) MsiOverlayMemoryTokens.Add(r);
+            var remainingMsi = msiList.Where(x => !priorityMsi.Contains(x)).ToList();
+            msiList.Clear();
+            msiList.AddRange(priorityMsi);
+            msiList.AddRange(remainingMsi);
         }
 
         // Curate PbsDuplicateMemoryTokens so primary 5 PBS timings appear at top:
@@ -555,27 +581,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
         };
         foreach (var (id, name) in pbsTimingMap)
         {
-            var t = PbsDuplicateMemoryTokens.FirstOrDefault(x =>
+            var t = pbsList.FirstOrDefault(x =>
                 string.Equals(x.TokenId, id, StringComparison.OrdinalIgnoreCase) &&
                 (x.Question.Equals(name, StringComparison.OrdinalIgnoreCase) || x.Question.StartsWith(name, StringComparison.OrdinalIgnoreCase)));
             if (t == null)
             {
-                t = PbsDuplicateMemoryTokens.FirstOrDefault(x => string.Equals(x.TokenId, id, StringComparison.OrdinalIgnoreCase));
+                t = pbsList.FirstOrDefault(x => string.Equals(x.TokenId, id, StringComparison.OrdinalIgnoreCase));
             }
             if (t != null && !priorityPbs.Contains(t)) priorityPbs.Add(t);
         }
         if (priorityPbs.Count > 0)
         {
-            var remainingPbs = PbsDuplicateMemoryTokens.Where(x => !priorityPbs.Contains(x)).ToList();
-            PbsDuplicateMemoryTokens.Clear();
-            foreach (var p in priorityPbs) PbsDuplicateMemoryTokens.Add(p);
-            foreach (var r in remainingPbs) PbsDuplicateMemoryTokens.Add(r);
+            var remainingPbs = pbsList.Where(x => !priorityPbs.Contains(x)).ToList();
+            pbsList.Clear();
+            pbsList.AddRange(priorityPbs);
+            pbsList.AddRange(remainingPbs);
         }
-
-        OnPropertyChanged(nameof(HasPrimaryCbsTokens));
-        OnPropertyChanged(nameof(HasMsiOverlayTokens));
-        OnPropertyChanged(nameof(HasPbsDuplicateTokens));
-        OnPropertyChanged(nameof(HasGeneralMemoryTokens));
 
         // Curate AspmTokens so the primary PCIe latency optimization settings appear at the top:
         // 1. ASPM / Active State Power Management
@@ -583,7 +604,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         // 3. Re-Size BAR Support / Above 4G Decoding
         var priorityAspm = new List<ScewinToken>();
 
-        var aspm = AspmTokens.FirstOrDefault(t =>
+        var aspm = aspmList.FirstOrDefault(t =>
             t.Question.Equals("Active State Power Management (ASPM)", StringComparison.OrdinalIgnoreCase) ||
             t.Question.Equals("ASPM Mode Control", StringComparison.OrdinalIgnoreCase) ||
             t.Question.Equals("ASPM Support", StringComparison.OrdinalIgnoreCase) ||
@@ -595,7 +616,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 t.Question.Equals("PM L1 SS", StringComparison.OrdinalIgnoreCase)));
         if (aspm != null) priorityAspm.Add(aspm);
 
-        var bifurc = AspmTokens.FirstOrDefault(t =>
+        var bifurc = aspmList.FirstOrDefault(t =>
             t.Question.Contains("Bifurcation", StringComparison.OrdinalIgnoreCase) ||
             t.Question.Equals("PCIe/GFX Lanes Configuration", StringComparison.OrdinalIgnoreCase)) ??
             dump.Tokens.FirstOrDefault(t => t.Category == "ASPM" && (
@@ -603,7 +624,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 t.Question.Equals("PCIe/GFX Lanes Configuration", StringComparison.OrdinalIgnoreCase)));
         if (bifurc != null && !priorityAspm.Contains(bifurc)) priorityAspm.Add(bifurc);
 
-        var resizeBar = AspmTokens.FirstOrDefault(t =>
+        var resizeBar = aspmList.FirstOrDefault(t =>
             t.Question.Equals("Re-Size BAR Support", StringComparison.OrdinalIgnoreCase) ||
             t.Question.Equals("Above 4G Decoding", StringComparison.OrdinalIgnoreCase)) ??
             dump.Tokens.FirstOrDefault(t => t.Category == "ASPM" && (
@@ -613,19 +634,83 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         if (priorityAspm.Count > 0)
         {
-            var remaining = AspmTokens.Where(t => !priorityAspm.Contains(t)).ToList();
-            AspmTokens.Clear();
-            foreach (var p in priorityAspm) AspmTokens.Add(p);
-            foreach (var r in remaining) AspmTokens.Add(r);
+            var remaining = aspmList.Where(t => !priorityAspm.Contains(t)).ToList();
+            aspmList.Clear();
+            aspmList.AddRange(priorityAspm);
+            aspmList.AddRange(remaining);
         }
+
+        // Build curated QuickTweakTokens for DashboardView (top 6-8 popular system tweaks)
+        var quickTweaks = new List<ScewinToken>();
+        foreach (var p in priorityAspm)
+        {
+            if (!quickTweaks.Contains(p)) quickTweaks.Add(p);
+        }
+        var keyCpu = dump.Tokens.FirstOrDefault(t => t.Question.Contains("C-state", StringComparison.OrdinalIgnoreCase));
+        if (keyCpu != null && !quickTweaks.Contains(keyCpu)) quickTweaks.Add(keyCpu);
+
+        var keyCurve = dump.Tokens.FirstOrDefault(t => t.Question.Contains("Curve Optimizer", StringComparison.OrdinalIgnoreCase));
+        if (keyCurve != null && !quickTweaks.Contains(keyCurve)) quickTweaks.Add(keyCurve);
+
+        var keyPbo = dump.Tokens.FirstOrDefault(t => t.Question.Equals("Precision Boost Overdrive", StringComparison.OrdinalIgnoreCase));
+        if (keyPbo != null && !quickTweaks.Contains(keyPbo)) quickTweaks.Add(keyPbo);
+
+        var keyMcr = dump.Tokens.FirstOrDefault(t => t.Question.Contains("Memory Context Restore", StringComparison.OrdinalIgnoreCase));
+        if (keyMcr != null && !quickTweaks.Contains(keyMcr)) quickTweaks.Add(keyMcr);
+
+        for (int i = 0; i < aspmList.Count && quickTweaks.Count < 6; i++)
+        {
+            if (!quickTweaks.Contains(aspmList[i])) quickTweaks.Add(aspmList[i]);
+        }
+
+        // Combine memory tokens in curated order: CBS first, then MSI, then PBS, then General
+        List<ScewinToken> combinedMemoryTokens;
+        if (cbsList.Count > 0 || msiList.Count > 0 || pbsList.Count > 0)
+        {
+            combinedMemoryTokens = new List<ScewinToken>(cbsList.Count + msiList.Count + pbsList.Count + genList.Count);
+            combinedMemoryTokens.AddRange(cbsList);
+            combinedMemoryTokens.AddRange(msiList);
+            combinedMemoryTokens.AddRange(pbsList);
+            combinedMemoryTokens.AddRange(genList);
+        }
+        else
+        {
+            combinedMemoryTokens = memList;
+        }
+
+        // Perform batch updates via ReplaceRange (suppressing per-item layout invalidations)
+        AllTokens.ReplaceRange(allList);
+        AspmTokens.ReplaceRange(aspmList);
+        OverclockingTokens.ReplaceRange(ovcList);
+        PrimaryCbsMemoryTokens.ReplaceRange(cbsList);
+        MsiOverlayMemoryTokens.ReplaceRange(msiList);
+        PbsDuplicateMemoryTokens.ReplaceRange(pbsList);
+        GeneralMemoryTokens.ReplaceRange(genList);
+        MemoryTokens.ReplaceRange(combinedMemoryTokens);
+        CpuTokens.ReplaceRange(cpuList);
+        QuickTweakTokens.ReplaceRange(quickTweaks);
+        PendingDiffs.Clear();
+
+        OnPropertyChanged(nameof(HasPrimaryCbsTokens));
+        OnPropertyChanged(nameof(HasMsiOverlayTokens));
+        OnPropertyChanged(nameof(HasPbsDuplicateTokens));
+        OnPropertyChanged(nameof(HasGeneralMemoryTokens));
 
         UpdateOverclockingFilter();
         UpdateCpuPowerFilter();
         UpdatePcieFilter();
         UpdateMemoryFilter();
-        UpdateRawFilter();
+        UpdateRawFilter(immediate: true);
         OnPropertyChanged(nameof(ModifiedCount));
         OnPropertyChanged(nameof(HasModifiedItems));
+    }
+
+    private void OnTokenPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ScewinToken.IsModified) && sender is ScewinToken token)
+        {
+            OnTokenModified(token);
+        }
     }
 
     private void OnTokenModified(ScewinToken token)
@@ -889,9 +974,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    public void ImportDiff()
+    public async Task ImportDiffAsync()
     {
-        OpenDumpFileDialog();
+        await OpenDumpFileDialogAsync();
     }
 
     [RelayCommand]
@@ -1201,6 +1286,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
 
         var filter = MemorySubCategory ?? "All";
+        var tier = MemoryTierFilter ?? "All";
 
         if (filter == "All")
         {
@@ -1208,7 +1294,25 @@ public partial class MainViewModel : ObservableObject, IDisposable
             FilteredMsiOverlayMemoryTokens.ReplaceRange(MsiOverlayMemoryTokens);
             FilteredPbsDuplicateMemoryTokens.ReplaceRange(PbsDuplicateMemoryTokens);
             FilteredGeneralMemoryTokens.ReplaceRange(GeneralMemoryTokens);
-            FilteredMemoryTokens.ReplaceRange(MemoryTokens);
+
+            switch (tier)
+            {
+                case "Tier1Cbs":
+                    FilteredMemoryTokens.ReplaceRange(PrimaryCbsMemoryTokens);
+                    break;
+                case "Tier2Msi":
+                    FilteredMemoryTokens.ReplaceRange(MsiOverlayMemoryTokens);
+                    break;
+                case "Tier3Pbs":
+                    FilteredMemoryTokens.ReplaceRange(PbsDuplicateMemoryTokens);
+                    break;
+                case "General":
+                    FilteredMemoryTokens.ReplaceRange(GeneralMemoryTokens);
+                    break;
+                default:
+                    FilteredMemoryTokens.ReplaceRange(MemoryTokens);
+                    break;
+            }
         }
         else
         {
@@ -1250,7 +1354,25 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 if (string.Equals(t.SubCategory, filter, StringComparison.OrdinalIgnoreCase))
                     mem.Add(t);
             }
-            FilteredMemoryTokens.ReplaceRange(mem);
+
+            switch (tier)
+            {
+                case "Tier1Cbs":
+                    FilteredMemoryTokens.ReplaceRange(cbs);
+                    break;
+                case "Tier2Msi":
+                    FilteredMemoryTokens.ReplaceRange(msi);
+                    break;
+                case "Tier3Pbs":
+                    FilteredMemoryTokens.ReplaceRange(pbs);
+                    break;
+                case "General":
+                    FilteredMemoryTokens.ReplaceRange(gen);
+                    break;
+                default:
+                    FilteredMemoryTokens.ReplaceRange(mem);
+                    break;
+            }
         }
 
         OnPropertyChanged(nameof(HasFilteredPrimaryCbsTokens));
@@ -1294,6 +1416,26 @@ public partial class MainViewModel : ObservableObject, IDisposable
             var query = (RawSearchQuery ?? string.Empty).Trim();
             var category = RawCategoryFilter ?? "All";
             var onlyModified = RawOnlyModified;
+
+            if (string.IsNullOrEmpty(query) && category == "All" && !onlyModified)
+            {
+                var uiDispatcher = Application.Current?.Dispatcher;
+                if (uiDispatcher != null && !uiDispatcher.CheckAccess())
+                {
+                    await uiDispatcher.InvokeAsync(() =>
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            FilteredRawTokens.ReplaceRange(tokens);
+                        }
+                    });
+                }
+                else
+                {
+                    FilteredRawTokens.ReplaceRange(tokens);
+                }
+                return;
+            }
 
             // Perform 4000-token search matching on background thread Task.Run
             var matches = await Task.Run(() =>
@@ -1372,6 +1514,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             var query = (RawSearchQuery ?? string.Empty).Trim();
             var category = RawCategoryFilter ?? "All";
             var onlyModified = RawOnlyModified;
+
+            if (string.IsNullOrEmpty(query) && category == "All" && !onlyModified)
+            {
+                FilteredRawTokens.ReplaceRange(tokens);
+                return;
+            }
 
             var matches = new List<ScewinToken>();
             foreach (var t in tokens)

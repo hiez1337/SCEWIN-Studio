@@ -6,8 +6,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="800">
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
-        <StackPanel MaxWidth="1000">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
             <!-- Page Title -->
             <TextBlock Text="{Binding L10n[Nav_Memory]}"
                        FontWeight="Bold"
@@ -19,7 +24,7 @@
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
 
             <!-- SubCategory Filter Pills -->
-            <WrapPanel Margin="0,0,0,16">
+            <WrapPanel Margin="0,0,0,10">
                 <Button Content="{Binding L10n[Filter_All]}"
                         Command="{Binding SetMemorySubCategoryCommand}"
                         CommandParameter="All">
@@ -134,257 +139,240 @@
                 </Button>
             </WrapPanel>
 
-            <!-- AM4 Architecture Explainer Banner -->
-            <Border CornerRadius="8"
-                    Background="#182533"
-                    BorderBrush="#254B69"
-                    BorderThickness="1"
-                    Padding="16,14"
-                    Margin="0,0,0,20">
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Setter Property="Visibility" Value="Visible" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasMsiOverlayTokens}" Value="False">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="💡" FontSize="20" Margin="0,0,14,0" VerticalAlignment="Top" />
-                    <StackPanel Grid.Column="1">
-                        <TextBlock Text="{Binding L10n[Mem_ExplainerTitle], FallbackValue='Архитектура деревьев таймингов AMD AM4 / MSI Click BIOS'}"
-                                   FontWeight="SemiBold"
-                                   FontSize="14"
-                                   Foreground="#60CDFF" />
-                        <TextBlock Text="{Binding L10n[Mem_ExplainerBody]}"
-                                   FontSize="12"
-                                   TextWrapping="Wrap"
-                                   LineHeight="18"
-                                   Margin="0,6,0,0"
-                                   Foreground="#CCCCCC" />
-                    </StackPanel>
-                </Grid>
-            </Border>
+            <!-- Memory Architecture Tier Filter Pills -->
+            <WrapPanel Margin="0,0,0,16">
+                <Button Content="Все уровни"
+                        Command="{Binding SetMemoryTierFilterCommand}"
+                        CommandParameter="All">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding MemoryTierFilter}" Value="All">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="AMD CBS (Основной)"
+                        Command="{Binding SetMemoryTierFilterCommand}"
+                        CommandParameter="Tier1Cbs">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding MemoryTierFilter}" Value="Tier1Cbs">
+                                    <Setter Property="Background" Value="#14341F" />
+                                    <Setter Property="BorderBrush" Value="#4ADE80" />
+                                    <Setter Property="Foreground" Value="#4ADE80" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="MSI Click BIOS (0=Auto)"
+                        Command="{Binding SetMemoryTierFilterCommand}"
+                        CommandParameter="Tier2Msi">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding MemoryTierFilter}" Value="Tier2Msi">
+                                    <Setter Property="Background" Value="#182A38" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="AMD PBS (Дубликаты)"
+                        Command="{Binding SetMemoryTierFilterCommand}"
+                        CommandParameter="Tier3Pbs">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding MemoryTierFilter}" Value="Tier3Pbs">
+                                    <Setter Property="Background" Value="#2B2B2B" />
+                                    <Setter Property="BorderBrush" Value="#888888" />
+                                    <Setter Property="Foreground" Value="#E0E0E0" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="Общие (Voltages/Misc)"
+                        Command="{Binding SetMemoryTierFilterCommand}"
+                        CommandParameter="General">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FluentPillFilterButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding MemoryTierFilter}" Value="General">
+                                    <Setter Property="Background" Value="#1C384F" />
+                                    <Setter Property="BorderBrush" Value="#60CDFF" />
+                                    <Setter Property="Foreground" Value="#60CDFF" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </WrapPanel>
 
-            <!-- TIER 1: Primary AMD CBS (Directly visible at the top) -->
-            <StackPanel Margin="0,0,0,24">
-                <StackPanel.Style>
-                    <Style TargetType="StackPanel">
-                        <Setter Property="Visibility" Value="Visible" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasFilteredPrimaryCbsTokens}" Value="False">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </StackPanel.Style>
+            <!-- Collapsible Architectural Details -->
+            <StackPanel Margin="0,0,0,12">
+                <!-- TIER 2: Secondary MSI Click BIOS Tokens (Wrapped in collapsible Expander) -->
+                <Border CornerRadius="8"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        Margin="0,0,0,8">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasMsiOverlayTokens}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <Expander Header="{Binding L10n[Mem_MsiOverlayHeader], FallbackValue='⚙️ Оверлей MSI Click BIOS (числовой ввод, 0 = Auto)'}"
+                              IsExpanded="False"
+                              Padding="16,10"
+                              Background="Transparent"
+                              BorderThickness="0">
+                        <Expander.HeaderTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding}"
+                                               FontWeight="SemiBold"
+                                               FontSize="13"
+                                               Foreground="#60CDFF" />
+                                    <Border Margin="12,0,0,0"
+                                            Padding="6,1"
+                                            CornerRadius="4"
+                                            Background="#182A38"
+                                            BorderBrush="#254B69"
+                                            BorderThickness="1"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DataContext.L10n[Mem_MsiOverlayBadge], RelativeSource={RelativeSource AncestorType=UserControl}, FallbackValue='OEM Оверлей'}" FontSize="10" FontWeight="SemiBold" Foreground="#60CDFF" />
+                                    </Border>
+                                </StackPanel>
+                            </DataTemplate>
+                        </Expander.HeaderTemplate>
+                        <StackPanel Margin="0,8,0,0">
+                            <TextBlock Text="OEM-оверлей MSI Click BIOS OC Engine (Setup VarStore). Если в поле установлено 0, действует режим Auto и вступают в силу аппаратные регистры AMD CBS. При вводе числа PEI-модуль MSI переопределяет CBS."
+                                       FontSize="12"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                       Margin="0,0,0,8" />
+                            <Button Content="Показать только параметры MSI Click BIOS в списке"
+                                    Command="{Binding SetMemoryTierFilterCommand}"
+                                    CommandParameter="Tier2Msi"
+                                    Style="{StaticResource FluentPillFilterButtonStyle}"
+                                    HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </Expander>
+                </Border>
 
-                <Grid Margin="0,0,0,12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="{Binding L10n[Mem_Tier1Title], FallbackValue='Основной контроль: AMD CBS (AmdSetup)'}"
-                                   FontWeight="SemiBold"
-                                   FontSize="16"
-                                   Foreground="#FFFFFF" />
-                        <TextBlock Text="{Binding L10n[Mem_Tier1Desc], FallbackValue='Аппаратные шестнадцатеричные регистры AGESA (10h Clk = 16, 12h = 18, 26h = 38). Применяются процессором напрямую при значении 0 в оверлее MSI.'}"
-                                   FontSize="12"
-                                   Margin="0,2,0,0"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-                    <Border Grid.Column="1"
-                            Padding="8,3"
-                            CornerRadius="4"
-                            Background="#14341F"
-                            BorderBrush="#256B3D"
-                            BorderThickness="1"
-                            VerticalAlignment="Center">
-                        <TextBlock Text="{Binding L10n[Mem_Tier1Badge], FallbackValue='Основной / AMD CBS'}" FontSize="11" FontWeight="SemiBold" Foreground="#4ADE80" />
-                    </Border>
-                </Grid>
-
-                <ItemsControl ItemsSource="{Binding FilteredPrimaryCbsMemoryTokens}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <controls:TokenCard />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
-
-            <!-- TIER 2: Secondary MSI Click BIOS Tokens (Wrapped in collapsible Expander / spoiler) -->
-            <Border CornerRadius="8"
-                    BorderThickness="1"
-                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                    Margin="0,0,0,16">
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasFilteredMsiOverlayTokens}" Value="True">
-                                <Setter Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
-                <Expander Header="{Binding L10n[Mem_MsiOverlayHeader], FallbackValue='⚙️ Оверлей MSI Click BIOS (числовой ввод, 0 = Auto)'}"
-                          IsExpanded="False"
-                          Padding="16,12"
-                          Background="Transparent"
-                          BorderThickness="0">
-                    <Expander.HeaderTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding}"
-                                           FontWeight="SemiBold"
-                                           FontSize="14"
-                                           Foreground="#60CDFF" />
-                                <Border Margin="12,0,0,0"
-                                        Padding="6,1"
-                                        CornerRadius="4"
-                                        Background="#182A38"
-                                        BorderBrush="#254B69"
-                                        BorderThickness="1"
-                                        VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding DataContext.L10n[Mem_MsiOverlayBadge], RelativeSource={RelativeSource AncestorType=UserControl}, FallbackValue='OEM Оверлей'}" FontSize="10" FontWeight="SemiBold" Foreground="#60CDFF" />
-                                </Border>
-                            </StackPanel>
-                        </DataTemplate>
-                    </Expander.HeaderTemplate>
-                    <StackPanel Margin="0,12,0,0">
-                        <TextBlock Text="OEM-оверлей MSI Click BIOS OC Engine (Setup VarStore). Если в поле установлено 0, действует режим Auto и вступают в силу аппаратные регистры AMD CBS. При вводе числа PEI-модуль MSI переопределяет CBS."
-                                   FontSize="12"
-                                   TextWrapping="Wrap"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                   Margin="0,0,0,12" />
-                        <ItemsControl ItemsSource="{Binding FilteredMsiOverlayMemoryTokens}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <controls:TokenCard />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </Expander>
-            </Border>
-
-            <!-- TIER 3: AMD Overclocking PBS Tokens (Wrapped in collapsible Expander / spoiler) -->
-            <Border CornerRadius="8"
-                    BorderThickness="1"
-                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                    Margin="0,0,0,16">
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasFilteredPbsDuplicateTokens}" Value="True">
-                                <Setter Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
-                <Expander Header="{Binding L10n[Mem_PbsHeader], FallbackValue='📦 Служебные дубликаты AMD Overclocking (по умолчанию Auto)'}"
-                          IsExpanded="False"
-                          Padding="16,12"
-                          Background="Transparent"
-                          BorderThickness="0">
-                    <Expander.HeaderTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding}"
-                                           FontWeight="SemiBold"
-                                           FontSize="14"
-                                           Foreground="#B0B0B0" />
-                                <Border Margin="12,0,0,0"
-                                        Padding="6,1"
-                                        CornerRadius="4"
-                                        Background="#2B2B2B"
-                                        BorderBrush="#444444"
-                                        BorderThickness="1"
-                                        VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding DataContext.L10n[Mem_PbsBadge], RelativeSource={RelativeSource AncestorType=UserControl}, FallbackValue='AMD PBS'}" FontSize="10" FontWeight="SemiBold" Foreground="#888888" />
-                                </Border>
-                            </StackPanel>
-                        </DataTemplate>
-                    </Expander.HeaderTemplate>
-                    <StackPanel Margin="0,12,0,0">
-                        <TextBlock Text="Служебное дублирующее меню AMD Overclocking PBS. По умолчанию все параметры находятся в Auto (*[FF]Auto) и зеркалируют первичное дерево настроек."
-                                   FontSize="12"
-                                   TextWrapping="Wrap"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                   Margin="0,0,0,12" />
-                        <ItemsControl ItemsSource="{Binding FilteredPbsDuplicateMemoryTokens}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <controls:TokenCard />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </Expander>
-            </Border>
-
-            <!-- General Memory Settings (if any non-tiered memory tokens exist) -->
-            <StackPanel Margin="0,0,0,16">
-                <StackPanel.Style>
-                    <Style TargetType="StackPanel">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasFilteredGeneralMemoryTokens}" Value="True">
-                                <Setter Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </StackPanel.Style>
-                <TextBlock Text="Общие параметры контроллера памяти (DRAM / Interleaving / Voltages)"
-                           FontWeight="SemiBold"
-                           FontSize="15"
-                           Foreground="#FFFFFF"
-                           Margin="0,8,0,12" />
-                <ItemsControl ItemsSource="{Binding FilteredGeneralMemoryTokens}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <controls:TokenCard />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
-
-            <!-- Fallback if no tiered collections exist (generic dumps) -->
-            <StackPanel>
-                <StackPanel.Style>
-                    <Style TargetType="StackPanel">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                        <Style.Triggers>
-                            <MultiDataTrigger>
-                                <MultiDataTrigger.Conditions>
-                                    <Condition Binding="{Binding HasFilteredPrimaryCbsTokens}" Value="False" />
-                                    <Condition Binding="{Binding HasFilteredMsiOverlayTokens}" Value="False" />
-                                    <Condition Binding="{Binding HasFilteredPbsDuplicateTokens}" Value="False" />
-                                </MultiDataTrigger.Conditions>
-                                <Setter Property="Visibility" Value="Visible" />
-                            </MultiDataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </StackPanel.Style>
-                <ItemsControl ItemsSource="{Binding FilteredMemoryTokens}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <controls:TokenCard />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <!-- TIER 3: AMD Overclocking PBS Tokens (Wrapped in collapsible Expander) -->
+                <Border CornerRadius="8"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasPbsDuplicateTokens}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <Expander Header="{Binding L10n[Mem_PbsHeader], FallbackValue='📦 Служебные дубликаты AMD Overclocking (по умолчанию Auto)'}"
+                              IsExpanded="False"
+                              Padding="16,10"
+                              Background="Transparent"
+                              BorderThickness="0">
+                        <Expander.HeaderTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding}"
+                                               FontWeight="SemiBold"
+                                               FontSize="13"
+                                               Foreground="#B0B0B0" />
+                                    <Border Margin="12,0,0,0"
+                                            Padding="6,1"
+                                            CornerRadius="4"
+                                            Background="#2B2B2B"
+                                            BorderBrush="#444444"
+                                            BorderThickness="1"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DataContext.L10n[Mem_PbsBadge], RelativeSource={RelativeSource AncestorType=UserControl}, FallbackValue='AMD PBS'}" FontSize="10" FontWeight="SemiBold" Foreground="#888888" />
+                                    </Border>
+                                </StackPanel>
+                            </DataTemplate>
+                        </Expander.HeaderTemplate>
+                        <StackPanel Margin="0,8,0,0">
+                            <TextBlock Text="Служебное дублирующее меню AMD Overclocking PBS. По умолчанию все параметры находятся в Auto (*[FF]Auto) и зеркалируют первичное дерево настроек."
+                                       FontSize="12"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                       Margin="0,0,0,8" />
+                            <Button Content="Показать только параметры AMD PBS в списке"
+                                    Command="{Binding SetMemoryTierFilterCommand}"
+                                    CommandParameter="Tier3Pbs"
+                                    Style="{StaticResource FluentPillFilterButtonStyle}"
+                                    HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </Expander>
+                </Border>
             </StackPanel>
         </StackPanel>
-    </ScrollViewer>
+
+        <!-- Fully Virtualized ListView for Memory Tokens -->
+        <ListView Grid.Row="1"
+                  ItemsSource="{Binding FilteredMemoryTokens}"
+                  Background="Transparent"
+                  BorderThickness="0"
+                  Padding="0"
+                  HorizontalContentAlignment="Stretch"
+                  ScrollViewer.CanContentScroll="True"
+                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  VirtualizingPanel.ScrollUnit="Pixel"
+                  VirtualizingPanel.CacheLength="2">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderThickness" Value="0" />
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="Margin" Value="0,0,0,10" />
+                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListViewItem">
+                                <ContentPresenter HorizontalAlignment="Stretch"
+                                                  VerticalAlignment="Center" />
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <controls:TokenCard />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
 </UserControl>
