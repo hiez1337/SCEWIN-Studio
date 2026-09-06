@@ -148,7 +148,7 @@ git clone https://github.com/hiez1337/SCEWIN-Studio.git
 cd SCEWIN-Studio
 
 # Build the solution
-dotnet build src/SCEWIN_Studio/SCEWIN_Studio.csproj -c Release
+dotnet build SCEWIN_Studio.sln -c Release
 
 # Publish self-contained single-file executable
 dotnet publish src/SCEWIN_Studio/SCEWIN_Studio.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ./publish/self-contained

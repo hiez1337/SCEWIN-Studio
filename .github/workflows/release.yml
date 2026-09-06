@@ -96,14 +96,14 @@ jobs:
             
             Modern AMI UEFI NVRAM Editor and Configurator optimized for large BIOS dumps (3,000–4,000+ tokens).
             
-            ### 🚀 Highlights & Features:
+            ### Highlights & Capabilities:
             - **High-Performance Virtualization**: Zero lag when scrolling, searching, and switching tabs across 3,000+ BIOS parameters.
             - **Multi-Tier Memory Tuning**: Full visual support for AMD CBS (AmdSetup), MSI Click BIOS OC Engine (0 = Auto), and AMD PBS duplicates.
             - **PBO & Power Management**: Curve Optimizer, PPT/TDC/EDC limits, CPU C-States, ASPM L1 substates, PCIe Bifurcation & Resizable BAR.
             - **Dual-Dump Compare**: Side-by-side visual diff analysis between two NVRAM dump profiles with delta export.
             - **Embedded Drivers**: Bundled official AMI SCEWIN 5.05.01 utilities for automatic driver deployment and live NVRAM import/export.
             
-            ### 📦 Download Options:
+            ### Distribution Packages:
             - **`SCEWIN_Studio.exe`**: Ready-to-run single-file executable (portable).
             - **`SCEWIN_Studio_win-x64_SelfContained.zip`**: Complete portable bundle (no .NET installation required).
             - **`SCEWIN_Studio_win-x64_FrameworkDependent.zip`**: Lightweight bundle (requires .NET 8 Desktop Runtime).
