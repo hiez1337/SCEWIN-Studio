@@ -256,37 +256,37 @@
                 </ui:NavigationView.PaneHeader>
 
                 <ui:NavigationView.MenuItems>
-                    <ui:NavigationViewItem Content="{Binding L10n[Nav_Dashboard]}" Tag="Dashboard">
+                    <ui:NavigationViewItem AutomationProperties.AutomationId="Nav_Dashboard" Content="{Binding L10n[Nav_Dashboard]}" Tag="Dashboard">
                         <ui:NavigationViewItem.Icon>
                             <ui:FontIcon Glyph="&#xF0E2;" />
                         </ui:NavigationViewItem.Icon>
                     </ui:NavigationViewItem>
-                    <ui:NavigationViewItem Content="{Binding L10n[Nav_Overclocking]}" Tag="Overclocking">
+                    <ui:NavigationViewItem AutomationProperties.AutomationId="Nav_Overclocking" Content="{Binding L10n[Nav_Overclocking]}" Tag="Overclocking">
                         <ui:NavigationViewItem.Icon>
                             <ui:FontIcon Glyph="&#xEC4A;" />
                         </ui:NavigationViewItem.Icon>
                     </ui:NavigationViewItem>
-                    <ui:NavigationViewItem Content="{Binding L10n[Nav_Memory]}" Tag="Memory">
+                    <ui:NavigationViewItem AutomationProperties.AutomationId="Nav_Memory" Content="{Binding L10n[Nav_Memory]}" Tag="Memory">
                         <ui:NavigationViewItem.Icon>
                             <ui:FontIcon Glyph="&#xE8F1;" />
                         </ui:NavigationViewItem.Icon>
                     </ui:NavigationViewItem>
-                    <ui:NavigationViewItem Content="{Binding L10n[Nav_PciePower]}" Tag="PciePower" IsSelected="True">
+                    <ui:NavigationViewItem AutomationProperties.AutomationId="Nav_PciePower" Content="{Binding L10n[Nav_PciePower]}" Tag="PciePower">
                         <ui:NavigationViewItem.Icon>
                             <ui:FontIcon Glyph="&#xE765;" />
                         </ui:NavigationViewItem.Icon>
                     </ui:NavigationViewItem>
-                    <ui:NavigationViewItem Content="{Binding L10n[Nav_CpuPower]}" Tag="CpuPower">
+                    <ui:NavigationViewItem AutomationProperties.AutomationId="Nav_CpuPower" Content="{Binding L10n[Nav_CpuPower]}" Tag="CpuPower">
                         <ui:NavigationViewItem.Icon>
                             <ui:FontIcon Glyph="&#xE950;" />
                         </ui:NavigationViewItem.Icon>
                     </ui:NavigationViewItem>
-                    <ui:NavigationViewItem Content="{Binding L10n[Nav_RawTokens]}" Tag="RawTokens">
+                    <ui:NavigationViewItem AutomationProperties.AutomationId="Nav_RawTokens" Content="{Binding L10n[Nav_RawTokens]}" Tag="RawTokens">
                         <ui:NavigationViewItem.Icon>
                             <ui:FontIcon Glyph="&#xE8A5;" />
                         </ui:NavigationViewItem.Icon>
                     </ui:NavigationViewItem>
-                    <ui:NavigationViewItem Content="{Binding L10n[Nav_ProfilesDiff]}" Tag="ProfilesDiff">
+                    <ui:NavigationViewItem AutomationProperties.AutomationId="Nav_ProfilesDiff" Content="{Binding L10n[Nav_ProfilesDiff]}" Tag="ProfilesDiff">
                         <ui:NavigationViewItem.Icon>
                             <ui:FontIcon Glyph="&#xE8AB;" />
                         </ui:NavigationViewItem.Icon>
@@ -294,7 +294,7 @@
                 </ui:NavigationView.MenuItems>
 
                 <ui:NavigationView.FooterMenuItems>
-                    <ui:NavigationViewItem Content="{Binding L10n[Nav_Settings]}" Tag="Settings">
+                    <ui:NavigationViewItem AutomationProperties.AutomationId="Nav_Settings" Content="{Binding L10n[Nav_Settings]}" Tag="Settings">
                         <ui:NavigationViewItem.Icon>
                             <ui:FontIcon Glyph="&#xE713;" />
                         </ui:NavigationViewItem.Icon>

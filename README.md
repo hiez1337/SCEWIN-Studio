@@ -21,7 +21,7 @@
 ## 📸 Скриншоты интерфейса / UI Showcase
 
 ### 1. 🖥️ Панель управления (Dashboard)
-Статус подключения к AMI Aptio V, определение материнской платы, версия BIOS, контрольная сумма HII CRC32 и быстрые карточки рекомендаций.
+Статус подключения к AMI Aptio V, определение материнской платы, версия BIOS, контрольная сумма HII CRC32, быстрые карточки рекомендаций и боковая панель ожидающих изменений (Diff).
 <p align="center">
   <img src="docs/screenshots/01_dashboard.png" alt="Dashboard" width="850" />
 </p>
@@ -32,31 +32,37 @@
   <img src="docs/screenshots/02_memory_tuning.png" alt="Memory & Timings" width="850" />
 </p>
 
-### 3. 🔌 PCIe, ASPM и Бифуркация линий
-Управление состояниями энергосбережения шины PCI Express (L0s, L1, L1 Substates), ReBAR (Resizable BAR) и конфигурацией разделения слотов PCIe.
+### 3. 🚀 Разгон и Precision Boost Overdrive (PBO)
+Тонкая настройка PBO, Curve Optimizer для каждого ядра с переключателями Positive/Negative и шагами Magnitude, скаляр PBO и лимиты мощности.
+<p align="center">
+  <img src="docs/screenshots/08_overclocking.png" alt="Overclocking & PBO" width="850" />
+</p>
+
+### 4. 🔌 PCIe, ASPM и Бифуркация линий
+Управление состояниями энергосбережения шины PCI Express (L0s, L1, L1 Substates), ReBAR (Resizable BAR), NVMe RAID и конфигурацией разделения слотов PCIe.
 <p align="center">
   <img src="docs/screenshots/03_pcie_power.png" alt="PCIe Power & ASPM" width="850" />
 </p>
 
-### 4. 🚀 Процессор, PBO и C-States
-Тонкая настройка Precision Boost Overdrive (PBO), Curve Optimizer для каждого ядра, лимитов по току и мощности (PPT, TDC, EDC), состояний энергосбережения (Global C-States, DF C-States, CPPC).
+### 5. ⚡ Процессор и C-States
+Управление глобальными состояниями сна ядер (Global C-state Control, DF C-States, CPPC, CPPC Preferred Cores, Core Performance Boost).
 <p align="center">
-  <img src="docs/screenshots/04_cpu_power.png" alt="CPU Power & PBO" width="850" />
+  <img src="docs/screenshots/04_cpu_power.png" alt="CPU Power & C-States" width="850" />
 </p>
 
-### 5. 📋 Каталог всех токенов (Raw Tokens)
+### 6. 📋 Каталог всех токенов (Raw Tokens)
 Виртуализированный каталог на 4,000+ параметров NVRAM с мгновенным debounced-поиском, фильтрацией по категориям и чип-фильтрами.
 <p align="center">
   <img src="docs/screenshots/05_raw_tokens.png" alt="Raw Tokens Catalog" width="850" />
 </p>
 
-### 6. 🔍 Двустороннее сравнение дампов BIOS (Dual-Dump Compare)
+### 7. 🔍 Двустороннее сравнение дампов BIOS (Dual-Dump Compare)
 Сопоставление двух независимых дампов (например, вашего профиля и профиля друга) с автоматическим обнаружением различий, фильтрацией по категориям и экспортом отчётов.
 <p align="center">
   <img src="docs/screenshots/06_dual_dump_comparison.png" alt="Dual Dump Comparison" width="850" />
 </p>
 
-### 7. ⚙️ Настройки и автоматический загрузчик SCEWIN
+### 8. ⚙️ Настройки и автоматический загрузчик SCEWIN
 Встроенный поиск локальных утилит SCEWIN, проверка драйверов ядра AMI (`amifldrv64.sys`) и загрузчик последней протестированной версии утилиты в один клик.
 <p align="center">
   <img src="docs/screenshots/07_settings.png" alt="Settings & Tools" width="850" />
